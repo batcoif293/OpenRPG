@@ -1,0 +1,3585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RPG Studio</title>
+<style>
+:root{
+  --bg:#1e1e1e; --panel:#252526; --panel2:#2d2d30; --panel3:#333338;
+  --border:#3f3f46; --text:#d4d4d4; --muted:#8b8b8b;
+  --accent:#4a9eff; --accent-dim:#2d6fb8; --danger:#e05252; --gold:#ffd166;
+}
+*{box-sizing:border-box;}
+html,body{height:100%;margin:0;}
+body{
+  font-family:"Segoe UI",system-ui,-apple-system,sans-serif;
+  font-size:13px;background:var(--bg);color:var(--text);
+  overflow:hidden;user-select:none;
+}
+#app{display:flex;flex-direction:column;height:100vh;}
+
+/* ---------------- TOP BAR ---------------- */
+#topbar{
+  height:44px;display:flex;align-items:center;gap:7px;padding:0 10px;
+  background:var(--panel);border-bottom:1px solid var(--border);flex-shrink:0;
+}
+.brand{font-weight:600;letter-spacing:.5px;color:#fff;margin-right:4px;font-size:14px;}
+.brand span{color:var(--accent);}
+button{
+  font:inherit;color:var(--text);background:var(--panel2);
+  border:1px solid var(--border);border-radius:4px;padding:6px 11px;
+  cursor:pointer;transition:background .12s;
+}
+button:hover{background:#3a3a42;}
+button:active{background:#44444d;}
+button.active{background:var(--accent-dim);border-color:var(--accent);color:#fff;}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600;}
+button.primary:hover{background:#3d8ee8;}
+button.danger{color:#ff9494;}
+button:disabled{opacity:.4;cursor:default;}
+.tb-sep{width:1px;height:24px;background:var(--border);margin:0 2px;}
+.tb-spacer{flex:1;}
+
+.viewtab{padding:5px 14px;color:#9a9a9a;}
+.viewtab.active{background:var(--accent-dim);border-color:var(--accent);color:#fff;}
+
+#zoomGroup{display:flex;align-items:center;gap:3px;}
+#zoomGroup button{padding:4px 9px;}
+#zoomLabel{min-width:44px;text-align:center;font-size:12px;color:#bbb;}
+body.view-ui #zoomGroup{display:none;}
+
+/* ---------------- BODY ---------------- */
+#body{display:flex;flex:1;min-height:0;}
+
+/* ---------------- SIDEBAR ---------------- */
+#sidebar{
+  width:262px;flex-shrink:0;background:var(--panel);
+  border-right:1px solid var(--border);display:flex;flex-direction:column;
+  overflow-y:auto;overflow-x:hidden;
+}
+.panel{border-bottom:1px solid var(--border);padding-bottom:8px;}
+.panel-title{
+  font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);
+  padding:10px 12px 6px;font-weight:600;display:flex;justify-content:space-between;align-items:center;
+}
+.panel-title button{padding:2px 8px;font-size:12px;line-height:1.4;}
+.tree-item{
+  display:flex;align-items:center;gap:6px;padding:5px 12px 5px 20px;
+  cursor:pointer;font-size:12.5px;color:#c8c8c8;position:relative;
+}
+.tree-item:hover{background:#2f2f35;}
+.tree-item.selected{background:var(--accent-dim);color:#fff;}
+.tree-item .ico{opacity:.75;font-size:12px;width:14px;text-align:center;}
+.tree-item .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.tree-item .badge{font-size:10px;background:#3d3d46;border-radius:3px;padding:1px 5px;color:#9d9d9d;}
+.tree-item .badge.gold{background:rgba(255,209,102,.16);color:var(--gold);}
+.tree-item .row-btns{display:none;gap:2px;}
+.tree-item:hover .row-btns{display:flex;}
+.tree-item .row-btns button{padding:0 5px;font-size:11px;background:transparent;border:none;color:#bbb;}
+.tree-item .row-btns button:hover{color:#fff;background:#4a4a55;border-radius:3px;}
+.tree-sep{height:1px;background:var(--border);margin:5px 12px;}
+.empty-hint{padding:6px 20px 10px;color:#6d6d6d;font-size:11.5px;font-style:italic;}
+
+/* player properties inline */
+#playerProps{padding:0 12px;}
+#playerProps .props{
+  padding:10px 10px 8px;border:1px solid var(--border);border-radius:6px;
+  background:#232327;margin-top:4px;
+}
+#playerProps .props-head{
+  display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;
+}
+#playerProps .props-title{
+  font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;font-weight:600;
+}
+#playerProps .props-head button{padding:1px 7px;font-size:11px;line-height:1.5;}
+
+/* palette */
+#paletteTools{padding:0 12px 8px;display:flex;gap:6px;align-items:center;}
+#paletteTools select{flex:1;min-width:0;}
+#tilePalette{padding:0 12px 6px;}
+#tilePalette canvas{display:block;background:#1a1a1a;border:1px solid var(--border);border-radius:3px;cursor:pointer;image-rendering:pixelated;}
+.layer-row{display:flex;gap:4px;padding:0 12px 8px;}
+.layer-row button{flex:1;padding:5px 4px;font-size:11.5px;}
+.pal-hint{color:#6d6d6d;font-size:11.5px;font-style:italic;padding:2px 12px 8px;line-height:1.4;}
+
+/* ---------------- WORKSPACE ---------------- */
+#workspace{flex:1;display:flex;flex-direction:column;min-width:0;background:#141414;position:relative;}
+#canvasWrap{flex:1;overflow:auto;padding:20px;background:#141414;}
+#canvas{display:block;margin:0 auto;background:#181818;image-rendering:pixelated;cursor:crosshair;box-shadow:0 0 0 1px #333;}
+body.playing #canvasWrap{padding:0;overflow:hidden;display:flex !important;align-items:center;justify-content:center;}
+body.playing #canvas{cursor:default;box-shadow:none;margin:0;}
+body.playing #uiEditorWrap{display:none !important;}
+
+#uiEditorWrap{display:none;flex:1;min-height:0;overflow:auto;align-items:center;justify-content:center;background:#141414;padding:20px;}
+body.view-ui #canvasWrap{display:none;}
+body.view-ui #uiEditorWrap{display:flex;}
+body.view-ui #panel-world, body.view-ui #panel-sheets, body.view-ui #panel-tiles{display:none;}
+body:not(.view-ui) #panel-ui{display:none;}
+#uiStage{position:relative;box-shadow:0 0 0 1px #333;background:#1b1b1f;}
+#uiCanvas{display:block;image-rendering:pixelated;cursor:default;}
+
+#statusbar{
+  height:26px;flex-shrink:0;background:var(--panel);border-top:1px solid var(--border);
+  display:flex;align-items:center;gap:16px;padding:0 12px;font-size:11.5px;color:var(--muted);
+}
+#statusbar b{color:#bbb;font-weight:500;}
+
+/* ---------------- FORMS ---------------- */
+input[type=text],input[type=number],select,textarea,input[type=color]{
+  font:inherit;font-size:12.5px;color:var(--text);background:#1b1b1e;
+  border:1px solid var(--border);border-radius:4px;padding:6px 8px;width:100%;outline:none;
+}
+input[type=color]{padding:2px;height:30px;cursor:pointer;}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);}
+textarea{resize:vertical;min-height:64px;font-family:inherit;line-height:1.45;}
+select{cursor:pointer;}
+input[type=checkbox]{accent-color:var(--accent);width:14px;height:14px;cursor:pointer;}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:11px;}
+.field>label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;}
+.field-row{display:flex;gap:10px;}
+.field-row>.field{flex:1;}
+.check-row{display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:12.5px;cursor:pointer;}
+
+/* ---------------- MODAL ---------------- */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;
+  justify-content:center;z-index:1000;backdrop-filter:blur(1px);
+}
+.modal{
+  background:var(--panel);border:1px solid var(--border);border-radius:8px;
+  box-shadow:0 18px 50px rgba(0,0,0,.6);display:flex;flex-direction:column;
+  max-height:90vh;animation:pop .12s ease-out;
+}
+@keyframes pop{from{transform:scale(.97);opacity:0;}to{transform:scale(1);opacity:1;}}
+.modal-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 16px;border-bottom:1px solid var(--border);font-weight:600;font-size:13.5px;color:#fff;
+}
+.modal-x{background:transparent;border:none;color:#999;font-size:15px;padding:2px 6px;cursor:pointer;border-radius:4px;}
+.modal-x:hover{background:#3a3a42;color:#fff;}
+.modal-body{padding:16px;overflow-y:auto;flex:1;min-height:0;}
+.modal-foot{
+  display:flex;justify-content:flex-end;gap:8px;padding:12px 16px;
+  border-top:1px solid var(--border);
+}
+
+/* tabs */
+.tabs{display:flex;gap:2px;padding:8px 12px 0;border-bottom:1px solid var(--border);background:var(--panel2);flex-shrink:0;}
+.tabs .tab{background:transparent;border:1px solid transparent;border-bottom:none;border-radius:5px 5px 0 0;padding:7px 16px;color:#9a9a9a;}
+.tabs .tab.active{background:var(--panel);border-color:var(--border);color:#fff;}
+
+/* ---------------- COMMAND EDITOR ---------------- */
+.cmd-list{display:flex;flex-direction:column;gap:4px;}
+.cmd{background:#1d1d20;border:1px solid #333338;border-radius:5px;overflow:hidden;}
+.cmd-head{display:flex;align-items:center;gap:8px;padding:6px 8px;}
+.cmd-label{
+  font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;
+  color:var(--accent);background:rgba(74,158,255,.12);padding:2px 6px;border-radius:3px;white-space:nowrap;
+}
+.cmd-sum{flex:1;font-size:12px;color:#c9c9c9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.cmd-btns{display:flex;gap:2px;}
+.cmd-btns button{padding:1px 6px;font-size:12px;background:transparent;border:none;color:#888;line-height:1.5;}
+.cmd-btns button:hover{background:#3a3a42;color:#fff;border-radius:3px;}
+.branch{margin:2px 0 6px 16px;border-left:2px solid #3a3a42;padding-left:10px;}
+.branch-title{font-size:11px;color:#9a9a9a;padding:3px 0 5px;font-weight:600;}
+.cmd-empty{color:#666;font-size:11.5px;font-style:italic;padding:4px 8px;}
+.cmd-add{margin-top:6px;}
+.cmd-add select{font-size:12px;padding:5px 8px;color:#9a9a9a;}
+
+/* popup menus */
+.bp-menu,.popup-menu{
+  position:absolute;background:var(--panel2);border:1px solid var(--border);border-radius:6px;
+  padding:4px;display:flex;flex-direction:column;gap:2px;box-shadow:0 10px 30px rgba(0,0,0,.55);min-width:170px;
+}
+.bp-menu{position:absolute;z-index:20;}
+.popup-menu{position:fixed;z-index:1500;}
+.popup-menu button,.bp-menu button{
+  text-align:left;padding:6px 14px;font-size:12.5px;background:transparent;border:none;
+  color:#d4d4d4;border-radius:4px;white-space:nowrap;
+}
+.popup-menu button:hover,.bp-menu button:hover{background:var(--accent-dim);color:#fff;}
+.popup-menu button:disabled{opacity:.4;cursor:default;}
+.popup-menu .menu-sep{height:1px;background:var(--border);margin:3px 6px;}
+
+/* sprite import */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.dir-row{
+  display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:5px;
+  cursor:pointer;border:1px solid transparent;margin-bottom:4px;
+}
+.dir-row:hover{background:#2c2c32;}
+.dir-row.active{background:rgba(74,158,255,.15);border-color:var(--accent-dim);}
+.dir-name{width:52px;font-weight:600;font-size:12px;}
+.dir-frames{flex:1;font-size:11.5px;color:#9a9a9a;font-family:ui-monospace,monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.dot{width:9px;height:9px;border-radius:2px;flex-shrink:0;}
+
+#toast{
+  position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:#2d2d33;border:1px solid var(--border);border-radius:6px;padding:9px 18px;
+  font-size:12.5px;box-shadow:0 8px 24px rgba(0,0,0,.5);opacity:0;pointer-events:none;
+  transition:all .2s;z-index:2000;
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+<div id="app">
+  <header id="topbar">
+    <div class="brand">RPG <span>Studio</span></div>
+    <div class="tb-sep"></div>
+    <button id="btn-new">New</button>
+    <button id="btn-save">Save</button>
+    <button id="btn-load">Load</button>
+    <div class="tb-sep"></div>
+    <button class="viewtab active" data-view="map">🗺 Map</button>
+    <button class="viewtab" data-view="ui">🖼 UI</button>
+    <div class="tb-sep"></div>
+    <button class="tool active" data-tool="paint" title="Paint tiles (right-click erases)">🖌 Paint</button>
+    <button class="tool" data-tool="fill" title="Flood fill region">🪣 Fill</button>
+    <button class="tool" data-tool="erase" title="Remove tiles">🧽 Remove</button>
+    <button class="tool" data-tool="event" title="Place / select events">◆ Event</button>
+    <button class="tool" data-tool="select" title="Select &amp; move events">⬚ Select</button>
+    <div class="tb-sep"></div>
+    <button id="btn-mapsettings">⚙ Map Settings</button>
+    <button id="btn-projectsettings">Project Settings</button>
+    <div class="tb-spacer"></div>
+    <div id="zoomGroup">
+      <button id="zoom-out" title="Zoom out">−</button>
+      <span id="zoomLabel">100%</span>
+      <button id="zoom-in" title="Zoom in">+</button>
+    </div>
+    <button id="btn-play" class="primary">▶ Play Test</button>
+  </header>
+
+  <div id="body">
+    <aside id="sidebar">
+      <div class="panel" id="panel-world">
+        <div class="panel-title"><span>World</span><button id="btn-new-world" title="Add a map, player, or more">+ New</button></div>
+        <div id="worldList"></div>
+        <div id="playerProps"></div>
+      </div>
+      <div class="panel" id="panel-sheets">
+        <div class="panel-title"><span>Sprite Sheets</span><button id="btn-importsheet">+ Import</button></div>
+        <div id="sheetList"></div>
+      </div>
+      <div class="panel" id="panel-tiles">
+        <div class="panel-title"><span>Tiles</span></div>
+        <div id="paletteTools">
+          <select id="tilesetSelect"></select>
+        </div>
+        <div class="layer-row">
+          <button data-layer="ground" class="active">Ground</button>
+          <button data-layer="deco">Decor</button>
+          <button data-layer="collision">Collision</button>
+        </div>
+        <div id="tilePalette"></div>
+      </div>
+      <div class="panel" id="panel-ui">
+        <div class="panel-title"><span>UI Elements</span></div>
+        <div class="layer-row">
+          <button id="ui-add-sprite">+ Sprite</button>
+          <button id="ui-add-text">+ Text</button>
+        </div>
+        <div id="uiElementList"></div>
+      </div>
+    </aside>
+
+    <main id="workspace">
+      <div id="canvasWrap"><canvas id="canvas"></canvas></div>
+      <div id="uiEditorWrap"><div id="uiStage"><canvas id="uiCanvas"></canvas></div></div>
+      <div id="statusbar">
+        <span>Map: <b id="st-map">—</b></span>
+        <span>Size: <b id="st-size">—</b></span>
+        <span>Cell: <b id="st-cell">—</b></span>
+        <span>Layer: <b id="st-layer">ground</b></span>
+        <span id="st-play" style="color:var(--gold);display:none;">● PLAY TEST RUNNING — press Esc to stop</span>
+      </div>
+    </main>
+  </div>
+</div>
+
+<input type="file" id="fileSheet" accept="image/*" style="display:none">
+<input type="file" id="fileProject" accept=".json,.rpgproj,application/json" style="display:none">
+<div id="toast"></div>
+
+<script>
+"use strict";
+/* =====================================================================
+   RPG STUDIO — engine + editor
+   ===================================================================== */
+
+/* ----------------------------- helpers ----------------------------- */
+const $  = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let _uidN = 1;
+const uid = p => `${p}_${(_uidN++).toString(36)}${Math.random().toString(36).slice(2,6)}`;
+const deep = o => JSON.parse(JSON.stringify(o));
+const div = (cls) => { const d = document.createElement('div'); if(cls) d.className = cls; return d; };
+const btn = (label, cls) => { const b = document.createElement('button'); b.textContent = label; if(cls) b.className = cls; return b; };
+
+const DIRS = { down:{x:0,y:1}, left:{x:-1,y:0}, right:{x:1,y:0}, up:{x:0,y:-1} };
+const DIR_LIST = ['down','left','right','up'];
+
+const CMD_LABELS = {
+  dialogue:'Show Text', choice:'Show Choices', if:'If Variable', ifKey:'If Key Pressed',
+  setVar:'Set Variable', move:'Move Character', wait:'Wait', comment:'Comment',
+  changeMap:'Change Map', changeSprite:'Change Sprite'
+};
+const KEY_OPTIONS = [
+  ['Space','Space'],['Enter','Enter'],['KeyZ','Z'],['KeyX','X'],
+  ['ArrowUp','Arrow Up'],['ArrowDown','Arrow Down'],['ArrowLeft','Arrow Left'],['ArrowRight','Arrow Right'],
+  ['KeyW','W'],['KeyA','A'],['KeyS','S'],['KeyD','D'],
+  ['ShiftLeft','Shift'],['Escape','Escape']
+];
+
+/* ----------------------------- state ------------------------------- */
+let project = null;
+let currentMapId = null;
+const editor = {
+  view:'map',
+  tool:'paint', layer:'ground',
+  selectedTile:null,
+  selectedEventId:null,
+  selectedUiId:null,
+  selectedPlayerId:null,
+  hover:{x:-1,y:-1},
+  zoom:1
+};
+
+const canvas = $('#canvas');
+const ctx2d = canvas.getContext('2d');
+
+/* ----------------------------- images ------------------------------ */
+const imgCache = new Map();
+
+/* Build a white→alpha copy of a sheet and swap it into the provided image. */
+function processWhiteToAlpha(sheet, img){
+  const raw = new Image();
+  raw.onload = () => {
+    const c = document.createElement('canvas');
+    c.width = raw.naturalWidth; c.height = raw.naturalHeight;
+    const g = c.getContext('2d');
+    g.drawImage(raw, 0, 0);
+    let data;
+    try { data = g.getImageData(0, 0, c.width, c.height); }
+    catch(e){ return; }
+    const a = data.data;
+    for(let i = 0; i < a.length; i += 4){
+      if(a[i] > 244 && a[i+1] > 244 && a[i+2] > 244) a[i+3] = 0;
+    }
+    g.putImageData(data, 0, 0);
+    img.src = c.toDataURL();
+  };
+  raw.src = sheet.src;
+}
+
+function getImg(sheet){
+  if(!sheet) return null;
+  const key = sheet.whiteTransparent ? sheet.id + '|w' : sheet.id;
+  let img = imgCache.get(key);
+  if(img) return img;
+
+  img = new Image();
+  img.addEventListener('load', () => {
+    // When a tileset image finishes loading, refresh map caches and the palette.
+    for(const m of project.maps) if(m.tilesetId === sheet.id) m.rev = (m.rev||0) + 1;
+    const cm = getCurrentMap();
+    if(cm && cm.tilesetId === sheet.id) renderTilePalette();
+  });
+  img.src = sheet.src;
+  imgCache.set(key, img);
+
+  if(sheet.whiteTransparent) processWhiteToAlpha(sheet, img);
+  return img;
+}
+
+function invalidateSheetImg(sheet){
+  if(!sheet) return;
+  imgCache.delete(sheet.id);
+  imgCache.delete(sheet.id + '|w');
+  for(const m of project.maps) if(m.tilesetId === sheet.id) m.rev = (m.rev||0) + 1;
+  mapCacheKey = '';
+}
+
+function getSheet(id){ return project.spritesheets.find(s => s.id === id) || null; }
+function getMap(id){ return project.maps.find(m => m.id === id) || null; }
+function getCurrentMap(){ return getMap(currentMapId); }
+function sheetName(id){ const s = getSheet(id); return s ? s.name : ''; }
+function getPrimaryPlayer(){
+  if(!project || !Array.isArray(project.players) || !project.players.length) return null;
+  return project.players.find(p => p.primary) || project.players[0];
+}
+
+/* ----------------------------- toast ------------------------------- */
+let toastTimer = null;
+function toast(msg){
+  const el = $('#toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+/* ----------------------------- popup menu -------------------------- */
+let popupEl = null;
+let popupHandler = null;
+function closePopupMenu(){
+  if(popupEl){ popupEl.remove(); popupEl = null; }
+  if(popupHandler){ document.removeEventListener('pointerdown', popupHandler); popupHandler = null; }
+}
+function showPopupMenu(anchor, items){
+  closePopupMenu();
+  const menu = div('popup-menu');
+  for(const it of items){
+    if(it.sep){ menu.appendChild(div('menu-sep')); continue; }
+    const b = btn(it.label);
+    if(it.disabled) b.disabled = true;
+    b.onclick = () => { closePopupMenu(); if(it.onClick) it.onClick(); };
+    menu.appendChild(b);
+  }
+  document.body.appendChild(menu);
+  const r = anchor.getBoundingClientRect();
+  const mw = menu.offsetWidth, mh = menu.offsetHeight;
+  menu.style.left = Math.min(r.left, window.innerWidth - mw - 8) + 'px';
+  menu.style.top = (r.bottom + mh + 8 > window.innerHeight ? r.top - mh - 4 : r.bottom + 4) + 'px';
+  popupEl = menu;
+  popupHandler = (e) => { if(menu.contains(e.target)) return; closePopupMenu(); };
+  setTimeout(() => document.addEventListener('pointerdown', popupHandler), 0);
+}
+
+/* =====================================================================
+   PROJECT
+   ===================================================================== */
+function blankProject(){
+  return {
+    name:'Untitled Project', version:3,
+    spritesheets:[], maps:[], variables:{},
+    ui:{ width:960, height:540, elements:[] },
+    players:[{ id: uid('plr'), name:'Player 1', sheetId:null, speed:5, primary:true }],
+    settings:{ startMapId:null, startX:1, startY:1 }
+  };
+}
+
+function newProject(){
+  project = blankProject();
+  currentMapId = null;
+  editor.selectedTile = null;
+  editor.selectedEventId = null;
+  editor.selectedUiId = null;
+  editor.selectedPlayerId = project.players[0].id;
+  refreshAll();
+  setView('map');
+  toast('New project created');
+}
+
+function newMap(name, cols, rows, tileSize){
+  return {
+    id: uid('map'), name, cols, rows, tileSize, tilesetId:null, rev:0,
+    layers:{
+      ground: new Array(cols*rows).fill(-1),
+      deco:   new Array(cols*rows).fill(-1),
+      collision: new Array(cols*rows).fill(0)
+    },
+    events: []
+  };
+}
+
+let saveTimer = null;
+function markDirty(){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    try { localStorage.setItem('rpgstudio.autosave', JSON.stringify(project)); }
+    catch(e){}
+  }, 700);
+}
+
+/* ----------------------------- save / load ------------------------- */
+function saveProjectFile(){
+  const data = JSON.stringify(project, null, 1);
+  const blob = new Blob([data], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (project.name || 'project').replace(/[^\w\-]+/g,'_') + '.rpgproj.json';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  toast('Project saved to file');
+}
+
+function migrateProject(data){
+  if(!data || !Array.isArray(data.maps)) return null;
+  const p = Object.assign(blankProject(), data);
+  p.settings = Object.assign(blankProject().settings, data.settings || {});
+
+  if(!p.ui) p.ui = { width:960, height:540, elements:[] };
+  if(!Array.isArray(p.ui.elements)) p.ui.elements = [];
+
+  /* --- players (v3) --- */
+  const hasPlayers = Array.isArray(data.players) && data.players.length > 0;
+  if(hasPlayers){
+    p.players = data.players;
+  } else {
+    const legacySheet = (data.player && data.player.sheetId) || p.settings.playerSheetId || null;
+    const legacySpeed = (data.player && data.player.speed) || p.settings.playerSpeed || 5;
+    p.players = [{ id: uid('plr'), name:'Player 1', sheetId: legacySheet, speed: legacySpeed, primary:true }];
+  }
+  p.players.forEach(pl => {
+    pl.id = pl.id || uid('plr');
+    pl.name = pl.name || 'Player';
+    pl.sheetId = pl.sheetId || null;
+    pl.speed = pl.speed || 5;
+    pl.primary = !!pl.primary;
+  });
+  let seenPrimary = false;
+  p.players.forEach(pl => {
+    if(pl.primary){ if(seenPrimary) pl.primary = false; else seenPrimary = true; }
+  });
+  if(!seenPrimary && p.players.length) p.players[0].primary = true;
+
+  /* --- sprite sheets --- */
+  p.spritesheets.forEach(s => {
+    if(s.whiteTransparent === undefined) s.whiteTransparent = false;
+    if(s.isTileset === undefined) s.isTileset = false;
+  });
+
+  /* --- maps --- */
+  p.maps.forEach(m => {
+    if(!m.layers) m.layers = {
+      ground:new Array(m.cols*m.rows).fill(-1),
+      deco:new Array(m.cols*m.rows).fill(-1),
+      collision:new Array(m.cols*m.rows).fill(0)
+    };
+    if(!m.events) m.events = [];
+  });
+
+  delete p.player;
+  return p;
+}
+
+function loadProjectData(data){
+  const p = migrateProject(data);
+  if(!p){ toast('Invalid project file'); return; }
+  project = p;
+  imgCache.clear();
+  currentMapId = project.maps[0] ? project.maps[0].id : null;
+  editor.selectedTile = null;
+  editor.selectedEventId = null;
+  editor.selectedUiId = null;
+  editor.selectedPlayerId = (getPrimaryPlayer() || {}).id || null;
+  refreshAll();
+  setView('map');
+  toast('Project loaded');
+}
+
+/* =====================================================================
+   RENDER — editor
+   ===================================================================== */
+const mapCacheCanvas = document.createElement('canvas');
+let mapCacheKey = '';
+let checkerPattern = null;
+function getChecker(c){
+  if(checkerPattern) return checkerPattern;
+  const t = document.createElement('canvas'); t.width = t.height = 16;
+  const g = t.getContext('2d');
+  g.fillStyle = '#191919'; g.fillRect(0,0,16,16);
+  g.fillStyle = '#1f1f1f'; g.fillRect(0,0,8,8); g.fillRect(8,8,8,8);
+  checkerPattern = c.createPattern(t,'repeat');
+  return checkerPattern;
+}
+function drawTileLayer(c, map, layerName){
+  const arr = map.layers[layerName];
+  const sheet = getSheet(map.tilesetId);
+  if(!sheet) return;
+  const img = getImg(sheet);
+  if(!img.complete || !img.naturalWidth) return;
+  const ts = map.tileSize, fw = sheet.frameW, fh = sheet.frameH;
+  const maxRow = Math.floor(img.naturalHeight / fh);
+  for(let y=0; y<map.rows; y++){
+    const rowBase = y * map.cols;
+    for(let x=0; x<map.cols; x++){
+      const idx = arr[rowBase + x];
+      if(idx < 0) continue;
+      const sc = idx % sheet.cols;
+      const sr = Math.floor(idx / sheet.cols);
+      if(sr >= maxRow) continue;
+      c.drawImage(img, sc*fw, sr*fh, fw, fh, x*ts, y*ts, ts, ts);
+    }
+  }
+}
+function getMapCanvas(map){
+  const key = `${map.id}:${map.cols}x${map.rows}:${map.tileSize}:${map.tilesetId}:${map.rev}`;
+  if(key !== mapCacheKey){
+    mapCacheKey = key;
+    mapCacheCanvas.width  = Math.max(1, map.cols * map.tileSize);
+    mapCacheCanvas.height = Math.max(1, map.rows * map.tileSize);
+    const c = mapCacheCanvas.getContext('2d');
+    c.imageSmoothingEnabled = false;
+    c.clearRect(0,0,mapCacheCanvas.width,mapCacheCanvas.height);
+    drawTileLayer(c, map, 'ground');
+    drawTileLayer(c, map, 'deco');
+  }
+  return mapCacheCanvas;
+}
+
+function applyZoom(){
+  if(game.active){ canvas.style.width=''; canvas.style.height=''; return; }
+  const w = Math.round(canvas.width * editor.zoom) + 'px';
+  const h = Math.round(canvas.height * editor.zoom) + 'px';
+  if(canvas.style.width !== w) canvas.style.width = w;
+  if(canvas.style.height !== h) canvas.style.height = h;
+  const lab = $('#zoomLabel');
+  if(lab) lab.textContent = Math.round(editor.zoom*100) + '%';
+}
+
+function drawEditor(){
+  const map = getCurrentMap();
+
+  if(!map){
+    if(canvas.width !== 860 || canvas.height !== 560){ canvas.width = 860; canvas.height = 560; }
+    ctx2d.imageSmoothingEnabled = false;
+    ctx2d.fillStyle = '#161616'; ctx2d.fillRect(0,0,canvas.width,canvas.height);
+    ctx2d.fillStyle = '#555'; ctx2d.font = '14px "Segoe UI", sans-serif'; ctx2d.textAlign = 'center';
+    ctx2d.fillText('No map open — create one from the World panel on the left', canvas.width/2, canvas.height/2);
+    applyZoom();
+    return;
+  }
+
+  const ts = map.tileSize;
+  const W = map.cols * ts, H = map.rows * ts;
+  if(canvas.width !== W || canvas.height !== H){ canvas.width = W; canvas.height = H; }
+  ctx2d.imageSmoothingEnabled = false;
+  ctx2d.fillStyle = getChecker(ctx2d);
+  ctx2d.fillRect(0,0,W,H);
+  ctx2d.drawImage(getMapCanvas(map), 0, 0);
+
+  if(editor.layer === 'collision'){
+    ctx2d.fillStyle = 'rgba(255,70,70,.32)';
+    for(let y=0;y<map.rows;y++)
+      for(let x=0;x<map.cols;x++)
+        if(map.layers.collision[y*map.cols+x] === 1)
+          ctx2d.fillRect(x*ts, y*ts, ts, ts);
+  }
+
+  if(map.cols * map.rows <= 60000 && ts >= 8){
+    ctx2d.strokeStyle = 'rgba(255,255,255,.06)';
+    ctx2d.lineWidth = 1;
+    ctx2d.beginPath();
+    for(let x=0;x<=map.cols;x++){ ctx2d.moveTo(x*ts + .5, 0); ctx2d.lineTo(x*ts + .5, H); }
+    for(let y=0;y<=map.rows;y++){ ctx2d.moveTo(0, y*ts + .5); ctx2d.lineTo(W, y*ts + .5); }
+    ctx2d.stroke();
+  }
+
+  for(const ev of map.events) drawEventMarker(ctx2d, ev, ts, map);
+
+  const hv = editor.hover;
+  if(hv.x >= 0 && hv.y >= 0 && hv.x < map.cols && hv.y < map.rows){
+    ctx2d.strokeStyle = 'rgba(74,158,255,.85)';
+    ctx2d.lineWidth = 2;
+    ctx2d.strokeRect(hv.x*ts + 1, hv.y*ts + 1, ts - 2, ts - 2);
+  }
+
+  ctx2d.strokeStyle = '#3f3f46'; ctx2d.lineWidth = 1;
+  ctx2d.strokeRect(.5,.5,W-1,H-1);
+
+  applyZoom();
+}
+
+function drawEventMarker(c, ev, ts, map){
+  const x = ev.x*ts, y = ev.y*ts;
+  const sheet = getSheet(ev.spriteSheetId);
+  let drewSprite = false;
+  if(sheet){
+    const img = getImg(sheet);
+    const list = (sheet.frames && sheet.frames[ev.dir || 'down']) || [];
+    const idx = list.length ? list[0] : 0;
+    if(img.complete && img.naturalWidth){
+      const fw = sheet.frameW, fh = sheet.frameH;
+      c.drawImage(img, (idx % sheet.cols)*fw, Math.floor(idx/sheet.cols)*fh, fw, fh, x, y, ts, ts);
+      drewSprite = true;
+    }
+  }
+  if(!drewSprite){
+    c.fillStyle = 'rgba(120,180,255,.28)';
+    c.fillRect(x, y, ts, ts);
+  }
+  const sel = ev.id === editor.selectedEventId;
+  c.strokeStyle = sel ? '#ffd166' : 'rgba(120,180,255,.9)';
+  c.lineWidth = sel ? 3 : 2;
+  c.strokeRect(x + 1.5, y + 1.5, ts - 3, ts - 3);
+
+  c.fillStyle = sel ? '#ffd166' : '#78b4ff';
+  const cx = x + ts - 7, cy = y + 7;
+  c.beginPath(); c.moveTo(cx, cy-4); c.lineTo(cx+4, cy); c.lineTo(cx, cy+4); c.lineTo(cx-4, cy); c.closePath(); c.fill();
+
+  if(ts >= 24){
+    c.font = '10px "Segoe UI", sans-serif';
+    c.textAlign = 'left'; c.textBaseline = 'bottom';
+    const label = ev.name || 'Event';
+    const w = c.measureText(label).width;
+    c.fillStyle = 'rgba(0,0,0,.65)';
+    c.fillRect(x + 1, y + ts - 13, w + 6, 12);
+    c.fillStyle = '#e8e8e8';
+    c.fillText(label, x + 4, y + ts - 2);
+  }
+}
+
+/* =====================================================================
+   EDITOR INTERACTION
+   ===================================================================== */
+function eventAt(map, x, y){ return map.events.find(e => e.x === x && e.y === y) || null; }
+
+function floodFill(map, layer, sx, sy, value){
+  const arr = map.layers[layer];
+  const target = arr[sy*map.cols+sx];
+  if(target === value) return false;
+  const seen = new Uint8Array(map.cols*map.rows);
+  const stack = [[sx,sy]];
+  while(stack.length){
+    const [x,y] = stack.pop();
+    if(x<0||y<0||x>=map.cols||y>=map.rows) continue;
+    const i = y*map.cols+x;
+    if(seen[i]) continue;
+    if(arr[i] !== target) continue;
+    seen[i] = 1; arr[i] = value;
+    stack.push([x+1,y],[x-1,y],[x,y+1],[x,y-1]);
+  }
+  map.rev = (map.rev||0) + 1;
+  markDirty();
+  return true;
+}
+
+function applyTool(x, y, forceErase){
+  const map = getCurrentMap(); if(!map) return;
+  if(x < 0 || y < 0 || x >= map.cols || y >= map.rows) return;
+  const i = y*map.cols + x;
+
+  if(editor.tool === 'fill'){
+    if(editor.layer === 'collision'){
+      floodFill(map, 'collision', x, y, forceErase ? 0 : 1);
+    } else {
+      if(forceErase){ floodFill(map, editor.layer, x, y, -1); return; }
+      if(!editor.selectedTile){ toast('Pick a tile from the palette first'); return; }
+      const sheet = getSheet(editor.selectedTile.sheetId);
+      if(!sheet) return;
+      if(map.tilesetId !== sheet.id){ map.tilesetId = sheet.id; renderPaletteTools(); }
+      floodFill(map, editor.layer, x, y, editor.selectedTile.index);
+    }
+    return;
+  }
+
+  if(editor.tool === 'paint' && !forceErase){
+    if(editor.layer === 'collision'){ map.layers.collision[i] = 1; }
+    else {
+      if(!editor.selectedTile){ toast('Pick a tile from the palette first'); return; }
+      const sheet = getSheet(editor.selectedTile.sheetId);
+      if(!sheet) return;
+      if(map.tilesetId !== sheet.id){ map.tilesetId = sheet.id; renderPaletteTools(); }
+      map.layers[editor.layer][i] = editor.selectedTile.index;
+    }
+  } else if(editor.tool === 'erase' || forceErase){
+    if(editor.layer === 'collision') map.layers.collision[i] = 0;
+    else map.layers[editor.layer][i] = -1;
+  } else return;
+
+  map.rev = (map.rev || 0) + 1;
+  markDirty();
+}
+
+function cellFromEvent(e){
+  const map = getCurrentMap(); if(!map) return null;
+  const r = canvas.getBoundingClientRect();
+  const sx = canvas.width / r.width;
+  const sy = canvas.height / r.height;
+  const x = Math.floor(((e.clientX - r.left) * sx) / map.tileSize);
+  const y = Math.floor(((e.clientY - r.top)  * sy) / map.tileSize);
+  if(x < 0 || y < 0 || x >= map.cols || y >= map.rows) return null;
+  return {x, y};
+}
+
+let drag = null;
+canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+canvas.addEventListener('pointerdown', e => {
+  if(game.active) return;
+  const map = getCurrentMap(); if(!map) return;
+  const cell = cellFromEvent(e); if(!cell) return;
+  canvas.setPointerCapture(e.pointerId);
+  const rightClick = e.button === 2;
+
+  if(editor.tool === 'fill'){
+    applyTool(cell.x, cell.y, rightClick);
+    return;
+  }
+
+  if(editor.tool === 'paint' || editor.tool === 'erase'){
+    drag = { type:'paint' };
+    applyTool(cell.x, cell.y, rightClick || editor.tool === 'erase');
+    return;
+  }
+
+  const ev = eventAt(map, cell.x, cell.y);
+  if(ev){
+    editor.selectedEventId = ev.id;
+    drag = { type:'event', ev, from:{x:ev.x, y:ev.y} };
+    markDirty();
+    return;
+  }
+  if(editor.tool === 'event' && !rightClick){
+    const newEv = {
+      id: uid('ev'), name:'Event ' + (map.events.length + 1), x:cell.x, y:cell.y,
+      dir:'down', trigger:'action', spriteSheetId:null, solid:true, commands:[],
+      useBlueprint:false, blueprint:{nodes:[], links:[]}
+    };
+    map.events.push(newEv);
+    editor.selectedEventId = newEv.id;
+    map.rev = (map.rev||0) + 1;
+    markDirty();
+    openEventEditor(newEv);
+  }
+});
+
+canvas.addEventListener('pointermove', e => {
+  if(game.active) return;
+  const cell = cellFromEvent(e);
+  const map = getCurrentMap();
+  if(map){
+    editor.hover = cell || {x:-1,y:-1};
+    $('#st-cell').textContent = cell ? `${cell.x}, ${cell.y}` : '—';
+  }
+  if(drag && drag.type === 'paint' && cell) applyTool(cell.x, cell.y);
+});
+
+window.addEventListener('pointerup', e => {
+  if(drag && drag.type === 'event' && !game.active){
+    const cell = cellFromEvent(e);
+    const map = getCurrentMap();
+    if(cell && map){
+      const other = eventAt(map, cell.x, cell.y);
+      if(!other || other.id === drag.ev.id){
+        drag.ev.x = cell.x; drag.ev.y = cell.y;
+        map.rev = (map.rev||0) + 1;
+        markDirty();
+      }
+    }
+  }
+  drag = null;
+});
+
+canvas.addEventListener('dblclick', e => {
+  if(game.active) return;
+  const map = getCurrentMap(); if(!map) return;
+  const cell = cellFromEvent(e); if(!cell) return;
+  const ev = eventAt(map, cell.x, cell.y);
+  if(ev) openEventEditor(ev);
+});
+
+/* zoom */
+function setZoom(z){ editor.zoom = clamp(z, 0.25, 4); applyZoom(); }
+$('#zoom-in').onclick = () => setZoom(editor.zoom * 1.25);
+$('#zoom-out').onclick = () => setZoom(editor.zoom / 1.25);
+$('#canvasWrap').addEventListener('wheel', e => {
+  if(!e.ctrlKey || game.active) return;
+  e.preventDefault();
+  setZoom(editor.zoom * (e.deltaY < 0 ? 1.12 : 0.89));
+}, {passive:false});
+
+/* =====================================================================
+   SIDEBAR UI
+   ===================================================================== */
+function refreshAll(){
+  renderWorldList();
+  renderPlayerProps();
+  renderSheetList();
+  renderPaletteTools();
+  renderTilePalette();
+  renderUiElementList();
+  updateStatus();
+  markDirty();
+}
+
+/* ----------------------------- World list -------------------------- */
+function renderWorldList(){
+  const el = $('#worldList');
+  el.innerHTML = '';
+
+  if(!project.maps.length){
+    el.innerHTML = '<div class="empty-hint">No maps yet. Click “+ New”.</div>';
+  } else {
+    for(const m of project.maps){
+      const d = div('tree-item' + (m.id === currentMapId ? ' selected' : ''));
+      d.innerHTML = `<span class="ico">▦</span><span class="nm">${esc(m.name)}</span>
+        <span class="badge">${m.cols}×${m.rows}</span>
+        <span class="row-btns"><button data-act="edit" title="Properties">✎</button><button data-act="del" title="Delete">✕</button></span>`;
+      d.onclick = ev => {
+        const act = ev.target.dataset && ev.target.dataset.act;
+        if(act === 'edit'){ openMapSettings(m); return; }
+        if(act === 'del'){
+          if(!confirm(`Delete map “${m.name}”?`)) return;
+          project.maps = project.maps.filter(x => x.id !== m.id);
+          if(currentMapId === m.id) currentMapId = project.maps[0] ? project.maps[0].id : null;
+          refreshAll(); return;
+        }
+        openMap(m.id);
+      };
+      el.appendChild(d);
+    }
+  }
+
+  if(project.players.length){
+    el.appendChild(div('tree-sep'));
+    for(const p of project.players){
+      const d = div('tree-item' + (p.id === editor.selectedPlayerId ? ' selected' : ''));
+      d.innerHTML = `<span class="ico">☺</span><span class="nm">${esc(p.name)}</span>
+        ${p.primary ? '<span class="badge gold">PRIMARY</span>' : ''}
+        <span class="row-btns"><button data-act="del" title="Delete">✕</button></span>`;
+      d.onclick = ev => {
+        if(ev.target.dataset && ev.target.dataset.act === 'del'){
+          if(project.players.length <= 1){ toast('A project needs at least one player'); return; }
+          if(!confirm(`Delete player “${p.name}”?`)) return;
+          project.players = project.players.filter(x => x.id !== p.id);
+          if(editor.selectedPlayerId === p.id) editor.selectedPlayerId = null;
+          if(!project.players.some(pl => pl.primary)) project.players[0].primary = true;
+          renderWorldList(); renderPlayerProps(); markDirty();
+          return;
+        }
+        editor.selectedPlayerId = p.id;
+        renderWorldList();
+        renderPlayerProps();
+      };
+      el.appendChild(d);
+    }
+  }
+}
+
+/* ----------------------------- Player props ------------------------ */
+function renderPlayerProps(){
+  const host = $('#playerProps');
+  if(!host) return;
+  host.innerHTML = '';
+  const p = project.players.find(x => x.id === editor.selectedPlayerId);
+  if(!p) return;
+
+  const box = div('props');
+
+  const head = div('props-head');
+  const ttl = div('props-title');
+  ttl.textContent = 'Player Properties';
+  const delBtn = btn('✕','danger');
+  delBtn.title = 'Delete player';
+  delBtn.style.padding = '1px 7px';
+  delBtn.disabled = project.players.length <= 1;
+  delBtn.onclick = () => {
+    if(project.players.length <= 1) return;
+    if(!confirm(`Delete player “${p.name}”?`)) return;
+    project.players = project.players.filter(x => x.id !== p.id);
+    if(editor.selectedPlayerId === p.id) editor.selectedPlayerId = null;
+    if(!project.players.some(pl => pl.primary)) project.players[0].primary = true;
+    renderWorldList(); renderPlayerProps(); markDirty();
+  };
+  head.append(ttl, delBtn);
+
+  const nameIn = mkInput('text', p.name);
+  nameIn.onchange = () => {
+    p.name = nameIn.value.trim() || 'Player';
+    nameIn.value = p.name;
+    renderWorldList();
+    markDirty();
+  };
+
+  const charSheets = project.spritesheets.filter(s => !s.isTileset);
+  const sheetSel = mkSelect([{value:'', label:'— none —'}]
+    .concat(charSheets.map(s => ({value:s.id, label:s.name}))), p.sheetId || '');
+  sheetSel.onchange = () => { p.sheetId = sheetSel.value || null; renderWorldList(); markDirty(); };
+
+  const speedIn = mkInput('number', p.speed ?? 5, {min:1, max:20, step:0.5});
+  speedIn.onchange = () => {
+    p.speed = clamp(parseFloat(speedIn.value) || 5, 1, 20);
+    speedIn.value = p.speed;
+    markDirty();
+  };
+
+  const primarySel = mkSelect(project.players.map(pl => ({value:pl.id, label:pl.name})),
+    (getPrimaryPlayer() || {}).id || '');
+  primarySel.onchange = () => {
+    project.players.forEach(pl => pl.primary = (pl.id === primarySel.value));
+    renderWorldList(); renderPlayerProps(); markDirty();
+  };
+
+  box.append(
+    head,
+    field('Name', nameIn),
+    field('Sprite sheet', sheetSel),
+    field('Speed (tiles/sec)', speedIn),
+    field('Primary player', primarySel)
+  );
+  host.appendChild(box);
+}
+
+function addPlayer(){
+  const p = {
+    id: uid('plr'),
+    name: 'Player ' + (project.players.length + 1),
+    sheetId: null, speed: 5,
+    primary: project.players.length === 0
+  };
+  project.players.push(p);
+  editor.selectedPlayerId = p.id;
+  renderWorldList();
+  renderPlayerProps();
+  markDirty();
+}
+
+/* ----------------------------- Sheets ------------------------------ */
+function renderSheetList(){
+  const el = $('#sheetList');
+  el.innerHTML = '';
+  if(!project.spritesheets.length){
+    el.innerHTML = '<div class="empty-hint">No sprite sheets. Click “+ Import”.</div>';
+    return;
+  }
+  for(const s of project.spritesheets){
+    const d = div('tree-item');
+    d.innerHTML = `<span class="ico">${s.isTileset ? '▩' : '☺'}</span>
+      <span class="nm">${esc(s.name)}</span>
+      <span class="badge">${s.frameW}×${s.frameH}${s.whiteTransparent ? ' · α' : ''}</span>
+      <span class="row-btns"><button data-act="edit" title="Properties">✎</button><button data-act="del" title="Delete">✕</button></span>`;
+    d.onclick = ev => {
+      const act = ev.target.dataset && ev.target.dataset.act;
+      if(act === 'edit'){ openSheetProps(s); return; }
+      if(act === 'del'){
+        if(!confirm(`Delete sprite sheet “${s.name}”?`)) return;
+        deleteSheet(s);
+        return;
+      }
+      const map = getCurrentMap();
+      if(s.isTileset && map && editor.view === 'map'){
+        map.tilesetId = s.id; map.rev++;
+        renderPaletteTools(); renderTilePalette(); markDirty();
+      } else if(!s.isTileset){
+        toast(`“${s.name}” is a character sheet — use it in the World panel, events, or UI.`);
+      }
+    };
+    el.appendChild(d);
+  }
+}
+
+function deleteSheet(s){
+  project.spritesheets = project.spritesheets.filter(x => x.id !== s.id);
+  imgCache.delete(s.id);
+  imgCache.delete(s.id + '|w');
+  for(const m of project.maps) if(m.tilesetId === s.id) m.tilesetId = null;
+  for(const p of project.players) if(p.sheetId === s.id) p.sheetId = null;
+  project.ui.elements = project.ui.elements.filter(e => e.sheetId !== s.id);
+  mapCacheKey = '';
+  refreshAll();
+}
+
+function openSheetProps(sheet){
+  const wrap = div();
+  const nameIn = mkInput('text', sheet.name);
+
+  const whiteChk = mkCheck(!!sheet.whiteTransparent);
+  const whiteRow = document.createElement('label');
+  whiteRow.className = 'check-row';
+  whiteRow.append(whiteChk, document.createTextNode('Make white pixels transparent'));
+
+  const tilesetChk = mkCheck(!!sheet.isTileset);
+  const tilesetRow = document.createElement('label');
+  tilesetRow.className = 'check-row';
+  tilesetRow.append(tilesetChk, document.createTextNode('Use as a tileset (map tiles)'));
+
+  const info = div();
+  info.style.cssText = 'font-size:11.5px;color:#8b8b8b;line-height:1.5;margin-bottom:12px;';
+  info.innerHTML = `<b style="color:#bbb">${sheet.cols} × ${sheet.rows}</b> frames &nbsp;·&nbsp; ${sheet.frameW}×${sheet.frameH} px each`;
+
+  wrap.append(field('Name', nameIn), info, whiteRow, tilesetRow);
+
+  openModal({
+    title:'Sprite Sheet Properties',
+    width: 440,
+    body: wrap,
+    buttons: [
+      {label:'Delete', kind:'danger', onClick:(close) => {
+        if(!confirm(`Delete sprite sheet “${sheet.name}”?`)) return;
+        deleteSheet(sheet);
+        close();
+      }},
+      {label:'Cancel'},
+      {label:'Apply', kind:'primary', onClick:(close) => {
+        sheet.name = nameIn.value.trim() || sheet.name;
+
+        const wt = whiteChk.checked;
+        if(wt !== !!sheet.whiteTransparent){
+          sheet.whiteTransparent = wt;
+          invalidateSheetImg(sheet);
+        }
+
+        const isT = tilesetChk.checked;
+        if(isT !== !!sheet.isTileset){
+          sheet.isTileset = isT;
+          if(!isT){
+            for(const m of project.maps){
+              if(m.tilesetId === sheet.id){ m.tilesetId = null; m.rev = (m.rev||0) + 1; }
+            }
+          }
+          invalidateSheetImg(sheet);
+        }
+
+        refreshAll();
+        close();
+      }}
+    ]
+  });
+}
+
+function renderPaletteTools(){
+  const sel = $('#tilesetSelect');
+  const map = getCurrentMap();
+  const tilesets = project.spritesheets.filter(s => s.isTileset);
+  sel.innerHTML = '<option value="">— Tileset —</option>' +
+    tilesets.map(s => `<option value="${s.id}" ${map && map.tilesetId === s.id ? 'selected' : ''}>${esc(s.name)}</option>`).join('');
+  sel.onchange = () => {
+    if(!map) return;
+    map.tilesetId = sel.value || null;
+    map.rev = (map.rev||0) + 1;
+    renderTilePalette();
+    markDirty();
+  };
+}
+
+const paletteCanvas = document.createElement('canvas');
+let paletteCell = 32;
+function renderTilePalette(){
+  const host = $('#tilePalette');
+  host.innerHTML = '';
+  const map = getCurrentMap();
+  const sheet = getSheet(map ? map.tilesetId : null);
+  if(!sheet){
+    host.innerHTML = '<div class="pal-hint">No tileset assigned. Import a sprite sheet and tick “Use as a tileset”, then pick it above.</div>';
+    return;
+  }
+  const img = getImg(sheet);
+  if(!img.complete || !img.naturalWidth){
+    img.addEventListener('load', () => renderTilePalette(), {once:true});
+    host.innerHTML = '<div class="pal-hint">Loading tileset…</div>';
+    return;
+  }
+  const totalCols = sheet.cols, totalRows = sheet.rows;
+  paletteCell = Math.max(12, Math.min(32, Math.floor(228 / totalCols)));
+  paletteCanvas.width  = totalCols * paletteCell;
+  paletteCanvas.height = totalRows * paletteCell;
+  const c = paletteCanvas.getContext('2d');
+  c.imageSmoothingEnabled = false;
+  c.fillStyle = '#141414'; c.fillRect(0,0,paletteCanvas.width,paletteCanvas.height);
+  for(let r=0;r<totalRows;r++){
+    for(let col=0;col<totalCols;col++){
+      c.drawImage(img, col*sheet.frameW, r*sheet.frameH, sheet.frameW, sheet.frameH,
+        col*paletteCell, r*paletteCell, paletteCell, paletteCell);
+    }
+  }
+  c.strokeStyle = 'rgba(255,255,255,.08)';
+  for(let x=0;x<=totalCols;x++){ c.beginPath(); c.moveTo(x*paletteCell+.5,0); c.lineTo(x*paletteCell+.5,paletteCanvas.height); c.stroke(); }
+  for(let y=0;y<=totalRows;y++){ c.beginPath(); c.moveTo(0,y*paletteCell+.5); c.lineTo(paletteCanvas.width,y*paletteCell+.5); c.stroke(); }
+  if(editor.selectedTile && editor.selectedTile.sheetId === sheet.id){
+    const i = editor.selectedTile.index;
+    const col = i % totalCols, row = Math.floor(i/totalCols);
+    c.strokeStyle = '#ffd166'; c.lineWidth = 2;
+    c.strokeRect(col*paletteCell+1, row*paletteCell+1, paletteCell-2, paletteCell-2);
+  }
+
+  paletteCanvas.onpointerdown = ev => {
+    const r = paletteCanvas.getBoundingClientRect();
+    const sx = paletteCanvas.width / r.width;
+    const sy = paletteCanvas.height / r.height;
+    const col = Math.floor(((ev.clientX - r.left) * sx) / paletteCell);
+    const row = Math.floor(((ev.clientY - r.top)  * sy) / paletteCell);
+    if(col < 0 || row < 0 || col >= totalCols || row >= totalRows) return;
+    editor.selectedTile = { sheetId: sheet.id, index: row*totalCols + col };
+    if(editor.tool !== 'paint' && editor.tool !== 'fill') setTool('paint');
+    renderTilePalette();
+  };
+  host.appendChild(paletteCanvas);
+}
+
+function updateStatus(){
+  const map = getCurrentMap();
+  $('#st-map').textContent  = map ? map.name : '—';
+  $('#st-size').textContent = map ? `${map.cols} × ${map.rows}` : '—';
+  $('#st-layer').textContent = editor.layer;
+}
+
+function openMap(id){
+  currentMapId = id;
+  editor.selectedEventId = null;
+  renderWorldList();
+  updateStatus();
+  renderPaletteTools();
+  renderTilePalette();
+  applyZoom();
+}
+
+/* ----------------------------- view switching ---------------------- */
+function setView(v){
+  editor.view = v;
+  document.body.classList.toggle('view-ui', v === 'ui');
+  $$('.viewtab').forEach(b => b.classList.toggle('active', b.dataset.view === v));
+  if(v === 'ui'){ layoutUiStage(); renderUiElementList(); }
+  else applyZoom();
+}
+$$('.viewtab').forEach(b => b.onclick = () => setView(b.dataset.view));
+
+/* ----------------------------- tools ------------------------------- */
+function setTool(t){
+  editor.tool = t;
+  $$('#topbar .tool').forEach(b => b.classList.toggle('active', b.dataset.tool === t));
+  canvas.style.cursor = (t === 'paint' || t === 'erase' || t === 'fill') ? 'crosshair' : 'default';
+}
+$$('#topbar .tool').forEach(b => b.onclick = () => setTool(b.dataset.tool));
+
+$$('.layer-row button').forEach(b => b.onclick = () => {
+  if(!b.dataset.layer) return;
+  editor.layer = b.dataset.layer;
+  $$('.layer-row button[data-layer]').forEach(x => x.classList.toggle('active', x === b));
+  updateStatus();
+});
+
+/* =====================================================================
+   MODAL SYSTEM
+   ===================================================================== */
+function openModal(opts){
+  const overlay = div('modal-overlay');
+  const modal = div('modal');
+  modal.style.width = (opts.width || 480) + 'px';
+  if(opts.height) modal.style.height = opts.height;
+
+  const head = div('modal-head');
+  const titleEl = document.createElement('span');
+  titleEl.textContent = opts.title || '';
+  const xBtn = btn('✕', 'modal-x');
+  head.append(titleEl, xBtn);
+
+  const body = div('modal-body');
+  if(typeof opts.body === 'string') body.innerHTML = opts.body;
+  else if(opts.body) body.appendChild(opts.body);
+
+  const foot = div('modal-foot');
+  modal.append(head, body, foot);
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+
+  function close(){ overlay.remove(); if(opts.onClose) opts.onClose(); }
+  xBtn.onclick = close;
+
+  (opts.buttons || [{label:'Close'}]).forEach(b => {
+    const bEl = btn(b.label, b.kind);
+    bEl.onclick = () => { if(b.onClick){ if(b.onClick(close, body) === false) return; } close(); };
+    foot.appendChild(bEl);
+  });
+
+  if(opts.onMount) opts.onMount(body, close);
+  const firstInput = body.querySelector('input,select,textarea');
+  if(firstInput) setTimeout(() => firstInput.focus(), 30);
+  return {overlay, body, close};
+}
+
+function field(labelText, inputEl){
+  const d = div('field');
+  const l = document.createElement('label'); l.textContent = labelText;
+  d.append(l, inputEl);
+  return d;
+}
+function mkInput(type, value, attrs){
+  const el = document.createElement('input');
+  el.type = type; el.value = value ?? '';
+  Object.assign(el, attrs || {});
+  return el;
+}
+function mkSelect(options, value){
+  const el = document.createElement('select');
+  el.innerHTML = options.map(o => `<option value="${esc(o.value)}" ${String(o.value)===String(value)?'selected':''}>${esc(o.label)}</option>`).join('');
+  return el;
+}
+function mkTextarea(value){ const el = document.createElement('textarea'); el.value = value ?? ''; return el; }
+function mkCheck(checked){ const el = document.createElement('input'); el.type = 'checkbox'; el.checked = !!checked; return el; }
+
+/* =====================================================================
+   MAP SETTINGS
+   ===================================================================== */
+function openMapSettings(map){
+  const isNew = !map;
+  const src = map || newMap('New Map', 20, 15, 32);
+  const wrap = div();
+
+  const nameIn = mkInput('text', src.name);
+  const colsIn = mkInput('number', src.cols, {min:1, max:300});
+  const rowsIn = mkInput('number', src.rows, {min:1, max:300});
+  const tileIn = mkSelect([16,24,32,40,48,64].map(v => ({value:v, label:v+' px'})), src.tileSize);
+  const tilesets = project.spritesheets.filter(s => s.isTileset);
+  const tilesetIn = mkSelect([{value:'', label:'— none —'}].concat(tilesets.map(s => ({value:s.id, label:s.name}))), src.tilesetId || '');
+
+  const row = div('field-row');
+  row.append(field('Width (squares)', colsIn), field('Height (squares)', rowsIn));
+  wrap.append(field('Map name', nameIn), row, field('Tile size', tileIn), field('Tileset', tilesetIn));
+
+  const info = div();
+  info.style.cssText = 'font-size:11.5px;color:#8b8b8b;line-height:1.5;';
+  const updateInfo = () => {
+    const c = clamp(parseInt(colsIn.value)||1, 1, 300);
+    const r = clamp(parseInt(rowsIn.value)||1, 1, 300);
+    const ts = parseInt(tileIn.value) || 32;
+    info.innerHTML = `Canvas: <b style="color:#bbb">${c*ts} × ${r*ts} px</b> &nbsp;·&nbsp; ${c*r} tiles`;
+  };
+  colsIn.oninput = rowsIn.oninput = tileIn.onchange = updateInfo;
+  updateInfo();
+  wrap.appendChild(info);
+
+  openModal({
+    title: isNew ? 'New Map' : 'Map Settings',
+    width: 460,
+    body: wrap,
+    buttons: [
+      {label:'Cancel'},
+      {label: isNew ? 'Create Map' : 'Apply', kind:'primary', onClick:(close) => {
+        const name = nameIn.value.trim() || 'Map';
+        const cols = clamp(parseInt(colsIn.value) || 20, 1, 300);
+        const rows = clamp(parseInt(rowsIn.value) || 15, 1, 300);
+        const ts = parseInt(tileIn.value) || 32;
+        if(isNew){
+          const m = newMap(name, cols, rows, ts);
+          m.tilesetId = tilesetIn.value || null;
+          project.maps.push(m);
+          currentMapId = m.id;
+          editor.selectedTile = null;
+        } else {
+          src.name = name;
+          if(src.cols !== cols || src.rows !== rows) resizeMap(src, cols, rows);
+          src.tileSize = ts;
+          src.tilesetId = tilesetIn.value || null;
+          src.rev = (src.rev || 0) + 1;
+        }
+        mapCacheKey = '';
+        refreshAll();
+        close();
+      }}
+    ]
+  });
+}
+
+function resizeMap(map, cols, rows){
+  const oc = map.cols, or_ = map.rows;
+  const nl = {};
+  for(const k of ['ground','deco','collision']){
+    const def = k === 'collision' ? 0 : -1;
+    const arr = new Array(cols*rows).fill(def);
+    for(let y=0; y<Math.min(rows, or_); y++)
+      for(let x=0; x<Math.min(cols, oc); x++)
+        arr[y*cols + x] = map.layers[k][y*oc + x];
+    nl[k] = arr;
+  }
+  map.layers = nl;
+  map.cols = cols; map.rows = rows;
+  map.events = map.events.filter(e => e.x < cols && e.y < rows);
+}
+
+/* =====================================================================
+   SPRITE SHEET IMPORT
+   ===================================================================== */
+$('#btn-importsheet').onclick = () => $('#fileSheet').click();
+$('#fileSheet').onchange = e => {
+  const f = e.target.files[0];
+  if(!f) return;
+  const rd = new FileReader();
+  rd.onload = () => showSpriteImportDialog(f.name, rd.result);
+  rd.readAsDataURL(f);
+  e.target.value = '';
+};
+
+const DIR_COLORS = { down:'#4a9eff', left:'#4ade80', right:'#fbbf24', up:'#f472b6' };
+
+function showSpriteImportDialog(fileName, src){
+  const img = new Image();
+  img.onload = () => {
+    const baseName = fileName.replace(/\.[^.]+$/, '');
+    const st = {
+      name: baseName,
+      fw: Math.min(16, img.width),
+      fh: Math.min(16, img.height),
+      useTileset: false,
+      whiteTransparent: false,
+      dir: 'down',
+      frames: { down:[], left:[], right:[], up:[] }
+    };
+
+    const wrap = div();
+    const top = div('grid-2');
+    const left = div();
+    const preview = document.createElement('canvas');
+    preview.style.cssText = 'display:block;background:#141414;border:1px solid var(--border);border-radius:4px;image-rendering:pixelated;cursor:pointer;max-width:100%;';
+    left.appendChild(preview);
+
+    const right = div();
+    const nameIn = mkInput('text', st.name);
+    const fwIn = mkInput('number', st.fw, {min:1, max:512});
+    const fhIn = mkInput('number', st.fh, {min:1, max:512});
+    const fwRow = div('field-row');
+    fwRow.append(field('Frame width', fwIn), field('Frame height', fhIn));
+    right.append(field('Sheet name', nameIn), fwRow);
+
+    const dims = div();
+    dims.style.cssText = 'font-size:11.5px;color:#8b8b8b;margin-bottom:12px;';
+    right.appendChild(dims);
+
+    const useTilesetChk = mkCheck(false);
+    const tilesetRow = document.createElement('label');
+    tilesetRow.className = 'check-row';
+    tilesetRow.append(useTilesetChk, document.createTextNode('Use as a tileset (map tiles)'));
+    right.appendChild(tilesetRow);
+
+    const whiteChk = mkCheck(false);
+    const whiteRow = document.createElement('label');
+    whiteRow.className = 'check-row';
+    whiteRow.append(whiteChk, document.createTextNode('Make white pixels transparent'));
+    right.appendChild(whiteRow);
+
+    const dirBox = div();
+    right.appendChild(dirBox);
+
+    top.append(left, right);
+    wrap.append(top);
+
+    let scale = 1;
+
+    function redraw(){
+      const cols = Math.max(1, Math.floor(img.width / st.fw));
+      const rows = Math.max(1, Math.floor(img.height / st.fh));
+      scale = Math.min(1, 288 / Math.max(img.width, img.height));
+      preview.width  = Math.round(img.width * scale);
+      preview.height = Math.round(img.height * scale);
+      const c = preview.getContext('2d');
+      c.imageSmoothingEnabled = false;
+      c.fillStyle = '#141414'; c.fillRect(0,0,preview.width,preview.height);
+      c.drawImage(img, 0, 0, preview.width, preview.height);
+
+      const cw = st.fw * scale, ch = st.fh * scale;
+
+      if(!st.useTileset){
+        for(const d of DIR_LIST){
+          const list = st.frames[d];
+          c.fillStyle = DIR_COLORS[d] + '55';
+          for(const idx of list){
+            const col = idx % cols, rowI = Math.floor(idx / cols);
+            if(rowI >= rows) continue;
+            c.fillRect(col*cw, rowI*ch, cw, ch);
+          }
+        }
+      }
+      c.strokeStyle = 'rgba(255,255,255,.25)'; c.lineWidth = 1;
+      for(let x=0;x<=cols;x++){ c.beginPath(); c.moveTo(x*cw+.5,0); c.lineTo(x*cw+.5,preview.height); c.stroke(); }
+      for(let y=0;y<=rows;y++){ c.beginPath(); c.moveTo(0,y*ch+.5); c.lineTo(preview.width,y*ch+.5); c.stroke(); }
+      if(cw > 18 && ch > 14){
+        c.font = '9px monospace'; c.textAlign = 'left'; c.textBaseline = 'top';
+        for(let r=0;r<rows;r++) for(let col=0;col<cols;col++){
+          c.fillStyle = 'rgba(0,0,0,.6)';
+          c.fillRect(col*cw+1, r*ch+1, 13, 10);
+          c.fillStyle = '#cfcfcf';
+          c.fillText(String(r*cols+col), col*cw+2, r*ch+2);
+        }
+      }
+
+      dims.innerHTML = `<b style="color:#bbb">${cols} × ${rows}</b> frames &nbsp;·&nbsp; ${cols*rows} total &nbsp;·&nbsp; image ${img.width}×${img.height}px`;
+    }
+
+    function renderDirs(){
+      dirBox.innerHTML = '';
+      if(st.useTileset){
+        dirBox.innerHTML = '<div class="pal-hint" style="padding:0">Tilesets are used whole for map painting — no direction mapping needed.</div>';
+        return;
+      }
+      const title = div();
+      title.style.cssText = 'font-size:11.5px;color:#8b8b8b;text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:8px;';
+      title.textContent = 'Assign frames to directions';
+      dirBox.appendChild(title);
+
+      for(const d of DIR_LIST){
+        const row = div('dir-row' + (st.dir === d ? ' active' : ''));
+        const dot = document.createElement('span');
+        dot.className = 'dot'; dot.style.background = DIR_COLORS[d];
+        const nm = document.createElement('span'); nm.className = 'dir-name'; nm.textContent = d[0].toUpperCase() + d.slice(1);
+        const fr = document.createElement('span'); fr.className = 'dir-frames';
+        fr.textContent = st.frames[d].length ? st.frames[d].join(', ') : 'none — click frames →';
+        row.append(dot, nm, fr);
+        row.onclick = () => { st.dir = d; renderDirs(); };
+        dirBox.appendChild(row);
+      }
+      const hint = div();
+      hint.style.cssText = 'font-size:11px;color:#6d6d6d;margin-top:6px;line-height:1.4;';
+      hint.textContent = 'Click a direction, then click cells in the preview to add frames (click again to remove). Multiple frames = walk animation.';
+      dirBox.appendChild(hint);
+    }
+
+    preview.onpointerdown = ev => {
+      if(st.useTileset) return;
+      const r = preview.getBoundingClientRect();
+      const sx = preview.width / r.width;
+      const sy = preview.height / r.height;
+      const mx = (ev.clientX - r.left) * sx;
+      const my = (ev.clientY - r.top)  * sy;
+      const cols = Math.max(1, Math.floor(img.width / st.fw));
+      const rows = Math.max(1, Math.floor(img.height / st.fh));
+      const col = Math.floor(mx / (st.fw * scale));
+      const rowI = Math.floor(my / (st.fh * scale));
+      if(col < 0 || rowI < 0 || col >= cols || rowI >= rows) return;
+      const idx = rowI * cols + col;
+      const list = st.frames[st.dir];
+      const at = list.indexOf(idx);
+      if(at >= 0) list.splice(at, 1); else list.push(idx);
+      redraw(); renderDirs();
+    };
+
+    fwIn.oninput = fhIn.oninput = () => {
+      st.fw = clamp(parseInt(fwIn.value) || 1, 1, img.width);
+      st.fh = clamp(parseInt(fhIn.value) || 1, 1, img.height);
+      for(const d of DIR_LIST) st.frames[d] = [];
+      redraw(); renderDirs();
+    };
+    useTilesetChk.onchange = () => { st.useTileset = useTilesetChk.checked; redraw(); renderDirs(); };
+    whiteChk.onchange = () => { st.whiteTransparent = whiteChk.checked; };
+
+    redraw();
+    renderDirs();
+
+    openModal({
+      title:'Import Sprite Sheet',
+      width: 680,
+      body: wrap,
+      buttons: [
+        {label:'Cancel'},
+        {label:'Import', kind:'primary', onClick:(close) => {
+          st.name = nameIn.value.trim() || 'Sprite Sheet';
+          const cols = Math.floor(img.width / st.fw);
+          const rows = Math.floor(img.height / st.fh);
+          const sheet = {
+            id: uid('sheet'), name: st.name, src,
+            frameW: st.fw, frameH: st.fh, cols, rows,
+            isTileset: st.useTileset,
+            whiteTransparent: st.whiteTransparent,
+            frames: st.useTileset ? null : deep(st.frames)
+          };
+          project.spritesheets.push(sheet);
+          const map = getCurrentMap();
+          if(sheet.isTileset && map && !map.tilesetId){ map.tilesetId = sheet.id; map.rev++; }
+          if(!sheet.isTileset){
+            const pp = getPrimaryPlayer();
+            if(pp && !pp.sheetId) pp.sheetId = sheet.id;
+          }
+          refreshAll();
+          toast(`Imported “${sheet.name}” (${cols}×${rows} frames)`);
+          close();
+        }}
+      ]
+    });
+  };
+  img.src = src;
+}
+
+/* =====================================================================
+   COMMANDS
+   ===================================================================== */
+function newCommand(type){
+  switch(type){
+    case 'dialogue': return {type, speaker:'', text:'Hello!'};
+    case 'choice':   return {type, prompt:'', options:[{text:'Yes', commands:[]},{text:'No', commands:[]}]};
+    case 'if':       return {type, variable:'', op:'==', value:'', then:[], else:[]};
+    case 'ifKey':    return {type, key:'Space', then:[], else:[]};
+    case 'setVar':   return {type, variable:'', op:'set', value:'0'};
+    case 'move':     return {type, target:'player', dir:'down', steps:1};
+    case 'wait':     return {type, frames:60};
+    case 'comment':  return {type, text:'note'};
+    case 'changeMap':return {type, mapId:'', x:1, y:1, dir:'down'};
+    case 'changeSprite': return {type, target:'player', sheetId:''};
+    default: return {type};
+  }
+}
+
+function targetLabel(t){
+  if(t === 'player') return 'Player';
+  if(t === 'this') return 'This Event';
+  if(typeof t === 'string' && t.startsWith('evt_')){
+    const ev = (getCurrentMap()?.events || []).find(e => e.id === t.slice(4));
+    return ev ? ('Event: ' + ev.name) : 'Event';
+  }
+  return t || '?';
+}
+
+function cmdSummary(cmd){
+  if(!cmd) return '';
+  switch(cmd.type){
+    case 'dialogue': return `“${(cmd.text || '').replace(/\n/g,' ').slice(0,42)}”`;
+    case 'choice':   return `${(cmd.options || []).length} option(s)`;
+    case 'if':       return `${cmd.variable || '?'} ${cmd.op} ${cmd.value}`;
+    case 'ifKey':    return `key ${cmd.key}`;
+    case 'setVar':   return `${cmd.variable || '?'} ${cmd.op} ${cmd.value}`;
+    case 'move':     return `${targetLabel(cmd.target)} → ${cmd.dir} ×${cmd.steps}`;
+    case 'wait':     return `${cmd.frames} frames`;
+    case 'comment':  return (cmd.text || '').slice(0,42);
+    case 'changeMap': {
+      const m = getMap(cmd.mapId);
+      return `${m ? m.name : '—'} @ ${cmd.x},${cmd.y}`;
+    }
+    case 'changeSprite': return `${targetLabel(cmd.target)} → ${sheetName(cmd.sheetId) || 'none'}`;
+    default: return cmd.type || '';
+  }
+}
+
+function buildCommandEditor(rootEl, arr, onChange){
+  function rerender(){
+    rootEl.innerHTML = '';
+    renderList(rootEl, arr);
+    if(onChange) onChange();
+  }
+
+  function renderList(container, list){
+    if(!list.length){
+      const e = div('cmd-empty'); e.textContent = '(no commands)';
+      container.appendChild(e);
+    }
+    list.forEach((cmd, idx) => {
+      container.appendChild(makeRow(list, cmd, idx));
+      if(cmd.type === 'choice'){
+        (cmd.options || []).forEach(opt => {
+          container.appendChild(makeBranch(`Choice “${opt.text || '(empty)'}”`, opt.commands));
+        });
+      }
+      if(cmd.type === 'if' || cmd.type === 'ifKey'){
+        container.appendChild(makeBranch('Then', cmd.then));
+        container.appendChild(makeBranch('Else', cmd.else));
+      }
+    });
+
+    const addWrap = div('cmd-add');
+    const sel = document.createElement('select');
+    sel.innerHTML = '<option value="">+ Add command…</option>' +
+      Object.entries(CMD_LABELS).map(([k,v]) => `<option value="${k}">${v}</option>`).join('');
+    sel.onchange = () => {
+      if(!sel.value) return;
+      list.push(newCommand(sel.value));
+      rerender();
+    };
+    addWrap.appendChild(sel);
+    container.appendChild(addWrap);
+  }
+
+  function makeBranch(title, subList){
+    const b = div('branch');
+    const t = div('branch-title'); t.textContent = '▸ ' + title;
+    const sub = div('cmd-list');
+    b.append(t, sub);
+    renderList(sub, subList);
+    return b;
+  }
+
+  function makeRow(list, cmd, idx){
+    const row = div('cmd');
+    const head = div('cmd-head');
+    const lab = document.createElement('span'); lab.className = 'cmd-label';
+    lab.textContent = CMD_LABELS[cmd.type] || cmd.type;
+    const sum = document.createElement('span'); sum.className = 'cmd-sum';
+    sum.textContent = cmdSummary(cmd);
+    const btns = document.createElement('span'); btns.className = 'cmd-btns';
+    const mkBtn = (label, title, fn) => {
+      const b = document.createElement('button');
+      b.textContent = label; b.title = title;
+      b.onclick = ev => { ev.stopPropagation(); fn(); };
+      return b;
+    };
+    btns.append(
+      mkBtn('↑','Move up', () => { if(idx>0){ [list[idx-1],list[idx]]=[list[idx],list[idx-1]]; rerender(); } }),
+      mkBtn('↓','Move down', () => { if(idx<list.length-1){ [list[idx+1],list[idx]]=[list[idx],list[idx+1]]; rerender(); } }),
+      mkBtn('✎','Edit', () => editCommand(cmd, rerender)),
+      mkBtn('✕','Delete', () => { list.splice(idx,1); rerender(); })
+    );
+    head.append(lab, sum, btns);
+    row.appendChild(head);
+    return row;
+  }
+
+  rerender();
+}
+
+function editCommand(cmd, done){
+  const wrap = div();
+  const vars = Object.keys(project.variables || {});
+  const varDatalist = document.createElement('datalist');
+  varDatalist.id = 'vardatalist_' + Math.random().toString(36).slice(2,7);
+  varDatalist.innerHTML = vars.map(v => `<option value="${esc(v)}">`).join('');
+
+  const addVarField = (label, value) => {
+    const inp = mkInput('text', value);
+    inp.setAttribute('list', varDatalist.id);
+    const f = field(label, inp);
+    f.appendChild(varDatalist);
+    return {field: f, input: inp};
+  };
+
+  let apply = () => {};
+
+  switch(cmd.type){
+    case 'dialogue': {
+      const sp = mkInput('text', cmd.speaker || '');
+      const tx = mkTextarea(cmd.text || '');
+      tx.style.minHeight = '90px';
+      wrap.append(field('Speaker (optional)', sp), field('Text', tx));
+      apply = () => { cmd.speaker = sp.value; cmd.text = tx.value; };
+      break;
+    }
+    case 'choice': {
+      const pr = mkInput('text', cmd.prompt || '');
+      wrap.append(field('Prompt (optional)', pr));
+      const listBox = div();
+      listBox.style.cssText = 'display:flex;flex-direction:column;gap:6px;margin-bottom:10px;';
+      wrap.appendChild(field('Options', listBox));
+      cmd.options = cmd.options || [];
+
+      const rebuild = () => {
+        listBox.innerHTML = '';
+        cmd.options.forEach((opt, i) => {
+          const r = div();
+          r.style.cssText = 'display:flex;gap:6px;';
+          const inp = mkInput('text', opt.text);
+          inp.oninput = () => { opt.text = inp.value; };
+          const del = btn('✕', 'danger');
+          del.onclick = () => { cmd.options.splice(i,1); rebuild(); };
+          r.append(inp, del);
+          listBox.appendChild(r);
+        });
+        const add = btn('+ Add option');
+        add.onclick = () => { cmd.options.push({text:'Option ' + (cmd.options.length+1), commands:[]}); rebuild(); };
+        listBox.appendChild(add);
+      };
+      rebuild();
+      apply = () => { cmd.prompt = pr.value; };
+      break;
+    }
+    case 'if': {
+      const v = addVarField('Variable', cmd.variable || '');
+      const op = mkSelect(['==','!=','>','<','>=','<='].map(o=>({value:o,label:o})), cmd.op || '==');
+      const val = mkInput('text', cmd.value ?? '');
+      const row = div('field-row');
+      const opF = field('Operator', op); opF.style.flex = '0 0 90px';
+      row.append(opF, field('Value', val));
+      wrap.append(v.field, row);
+      apply = () => { cmd.variable = v.input.value.trim(); cmd.op = op.value; cmd.value = val.value; };
+      break;
+    }
+    case 'ifKey': {
+      const k = mkSelect(KEY_OPTIONS.map(([value,label]) => ({value, label})), cmd.key || 'Space');
+      wrap.append(field('Key (held down)', k));
+      apply = () => { cmd.key = k.value; };
+      break;
+    }
+    case 'setVar': {
+      const v = addVarField('Variable', cmd.variable || '');
+      const op = mkSelect([
+        {value:'set', label:'Set to'},
+        {value:'add', label:'Add'},
+        {value:'sub', label:'Subtract'}
+      ], cmd.op || 'set');
+      const val = mkInput('text', cmd.value ?? '0');
+      wrap.append(v.field, field('Operation', op), field('Value', val));
+      apply = () => { cmd.variable = v.input.value.trim(); cmd.op = op.value; cmd.value = val.value; };
+      break;
+    }
+    case 'move': {
+      const targets = [{value:'player', label:'Player'}, {value:'this', label:'This Event'}];
+      const map = getCurrentMap();
+      if(map) for(const ev of map.events) targets.push({value:'evt_'+ev.id, label:'Event: ' + ev.name});
+      const t = mkSelect(targets, cmd.target || 'player');
+      const d = mkSelect(DIR_LIST.map(x => ({value:x, label:x[0].toUpperCase()+x.slice(1)})), cmd.dir || 'down');
+      const s = mkInput('number', cmd.steps ?? 1, {min:1, max:50});
+      wrap.append(field('Target', t), field('Direction', d), field('Steps (tiles)', s));
+      const note = div();
+      note.style.cssText = 'font-size:11.5px;color:#8b8b8b;line-height:1.5;';
+      note.textContent = 'The sprite turns to face the direction and plays the matching animation frames from its sprite sheet.';
+      wrap.appendChild(note);
+      apply = () => {
+        cmd.target = t.value; cmd.dir = d.value;
+        cmd.steps = clamp(parseInt(s.value) || 1, 1, 50);
+      };
+      break;
+    }
+    case 'wait': {
+      const f = mkInput('number', cmd.frames ?? 60, {min:1, max:3600});
+      wrap.append(field('Frames (60 = 1 second)', f));
+      apply = () => { cmd.frames = clamp(parseInt(f.value) || 60, 1, 3600); };
+      break;
+    }
+    case 'comment': {
+      const t = mkTextarea(cmd.text || '');
+      wrap.append(field('Comment', t));
+      apply = () => { cmd.text = t.value; };
+      break;
+    }
+    case 'changeMap': {
+      const mapSel = mkSelect([{value:'', label:'— choose map —'}].concat(
+        project.maps.map(m => ({value:m.id, label:m.name}))), cmd.mapId || '');
+      const x = mkInput('number', cmd.x ?? 1, {min:0});
+      const y = mkInput('number', cmd.y ?? 1, {min:0});
+      const d = mkSelect(DIR_LIST.map(v => ({value:v, label:v[0].toUpperCase()+v.slice(1)})), cmd.dir || 'down');
+      const row = div('field-row');
+      row.append(field('Spawn X', x), field('Spawn Y', y));
+      wrap.append(field('Target map', mapSel), row, field('Facing', d));
+      const note = div();
+      note.style.cssText = 'font-size:11.5px;color:#8b8b8b;line-height:1.5;';
+      note.textContent = 'The player is placed at the spawn position on the new map.';
+      wrap.appendChild(note);
+      apply = () => {
+        cmd.mapId = mapSel.value;
+        const target = getMap(mapSel.value);
+        cmd.x = clamp(parseInt(x.value) || 0, 0, target ? target.cols-1 : 300);
+        cmd.y = clamp(parseInt(y.value) || 0, 0, target ? target.rows-1 : 300);
+        cmd.dir = d.value;
+      };
+      break;
+    }
+    case 'changeSprite': {
+      const targets = [{value:'player', label:'Player'}, {value:'this', label:'This Event'}];
+      const map = getCurrentMap();
+      if(map) for(const ev of map.events) targets.push({value:'evt_'+ev.id, label:'Event: ' + ev.name});
+      const t = mkSelect(targets, cmd.target || 'player');
+      const charSheets = project.spritesheets.filter(s => !s.isTileset);
+      const sh = mkSelect([{value:'', label:'— none —'}].concat(
+        charSheets.map(s => ({value:s.id, label:s.name}))), cmd.sheetId || '');
+      wrap.append(field('Target', t), field('Sprite sheet', sh));
+      apply = () => { cmd.target = t.value; cmd.sheetId = sh.value || null; };
+      break;
+    }
+  }
+
+  openModal({
+    title: 'Edit — ' + (CMD_LABELS[cmd.type] || cmd.type),
+    width: 500,
+    body: wrap,
+    buttons: [
+      {label:'Cancel'},
+      {label:'OK', kind:'primary', onClick:(close) => { apply(); done && done(); close(); }}
+    ]
+  });
+}
+
+/* =====================================================================
+   BLUEPRINT GRAPH EDITOR
+   ===================================================================== */
+function mountBlueprintEditor(container, draft, onChange){
+  container.style.position = 'relative';
+  container.innerHTML = '';
+  const canvas = document.createElement('canvas');
+  canvas.style.cssText = 'display:block;width:100%;height:100%;cursor:default;';
+  container.appendChild(canvas);
+  const ctx = canvas.getContext('2d');
+
+  if(!draft.blueprint) draft.blueprint = {nodes:[], links:[]};
+  const bp = draft.blueprint;
+  if(!Array.isArray(bp.nodes)) bp.nodes = [];
+  if(!Array.isArray(bp.links)) bp.links = [];
+  if(!bp.nodes.find(n => n.type === 'entry')){
+    bp.nodes.push({id:uid('node'), type:'entry', x:40, y:120});
+  }
+
+  const view = {x:30, y:20, k:1};
+  let selectedId = null;
+  let dragNode = null, dragOff = {x:0, y:0};
+  let linking = null;
+  let panning = null;
+  let raf = 0, destroyed = false;
+  let dpr = window.devicePixelRatio || 1;
+  let menuEl = null;
+
+  const nodeW = 200;
+
+  function nodeOuts(node){
+    if(node.type === 'entry') return ['out'];
+    if(node.type === 'choice') return (node.props.options || []).map((o,i) => 'opt'+i);
+    if(node.type === 'branch') return ['true','false'];
+    return ['out'];
+  }
+  function nodeHasIn(node){ return node.type !== 'entry'; }
+  function nodeHeight(node){
+    const outs = nodeOuts(node).length;
+    return Math.max(64, 26 + 14 + outs*22 + 8);
+  }
+  function outPinPos(node, i){
+    return {x: node.x + nodeW, y: node.y + 26 + 14 + i*22};
+  }
+  function inPinPos(node){ return {x: node.x, y: node.y + nodeHeight(node)/2}; }
+  function pinPos(node, port){
+    if(port === 'in') return inPinPos(node);
+    const outs = nodeOuts(node);
+    return outPinPos(node, Math.max(0, outs.indexOf(port)));
+  }
+
+  function resize(){
+    const w = container.clientWidth, h = container.clientHeight;
+    if(!w || !h) return;
+    dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.floor(w*dpr);
+    canvas.height = Math.floor(h*dpr);
+    canvas.style.width = w + 'px';
+    canvas.style.height = h + 'px';
+  }
+  const ro = new ResizeObserver(resize);
+  ro.observe(container);
+  resize();
+
+  const toGraph = (sx, sy) => ({x:(sx-view.x)/view.k, y:(sy-view.y)/view.k});
+
+  function hitNode(gx, gy){
+    for(let i=bp.nodes.length-1;i>=0;i--){
+      const n = bp.nodes[i];
+      const h = nodeHeight(n);
+      if(gx >= n.x && gx <= n.x + nodeW && gy >= n.y && gy <= n.y + h) return n;
+    }
+    return null;
+  }
+  function hitPin(gx, gy){
+    const r = 9 / view.k;
+    for(const n of bp.nodes){
+      if(nodeHasIn(n)){
+        const p = inPinPos(n);
+        if(Math.hypot(gx-p.x, gy-p.y) <= r) return {node:n, port:'in'};
+      }
+      const outs = nodeOuts(n);
+      for(let i=0;i<outs.length;i++){
+        const p = outPinPos(n,i);
+        if(Math.hypot(gx-p.x, gy-p.y) <= r) return {node:n, port:outs[i]};
+      }
+    }
+    return null;
+  }
+  function linkPath(a,b){
+    const dx = Math.max(40, Math.abs(b.x-a.x)*0.5);
+    return {c1:{x:a.x+dx, y:a.y}, c2:{x:b.x-dx, y:b.y}};
+  }
+  function cubic(p0,p1,p2,p3,t){
+    const u = 1-t;
+    return {
+      x: u*u*u*p0.x + 3*u*u*t*p1.x + 3*u*t*t*p2.x + t*t*t*p3.x,
+      y: u*u*u*p0.y + 3*u*u*t*p1.y + 3*u*t*t*p2.y + t*t*t*p3.y
+    };
+  }
+  function hitLink(gx, gy){
+    for(const l of bp.links){
+      const from = bp.nodes.find(n => n.id === l.from);
+      const to = bp.nodes.find(n => n.id === l.to);
+      if(!from || !to) continue;
+      const a = pinPos(from, l.port);
+      const b = pinPos(to, 'in');
+      const c = linkPath(a,b);
+      for(let t=0;t<=1;t+=0.05){
+        const p = cubic(a,c.c1,c.c2,b,t);
+        if(Math.hypot(gx-p.x, gy-p.y) < 7/view.k) return l;
+      }
+    }
+    return null;
+  }
+
+  function nodeTitle(n){
+    return n.type === 'entry' ? 'Entry' : (CMD_LABELS[n.props?.type] || n.props?.type || n.type);
+  }
+  function nodeSummary(n){
+    return n.type === 'entry' ? 'Start' : cmdSummary(n.props);
+  }
+  function nodeColor(n){
+    const t = n.type === 'entry' ? 'entry' : (n.props?.type || n.type);
+    return ({
+      entry:'#8a6d1f', dialogue:'#1f4e7a', choice:'#5a2d6e', branch:'#7a4a1f',
+      setVar:'#1f5a3a', move:'#1f5a5a', wait:'#3a3a44',
+      changeMap:'#6e2a2a', changeSprite:'#6e2a5a'
+    })[t] || '#33333d';
+  }
+
+  function rr(c,x,y,w,h,r){
+    const [tl,tr,br,bl] = Array.isArray(r) ? r : [r,r,r,r];
+    c.beginPath();
+    c.moveTo(x+tl,y);
+    c.lineTo(x+w-tr,y); c.arcTo(x+w,y,x+w,y+tr,tr);
+    c.lineTo(x+w,y+h-br); c.arcTo(x+w,y+h,x+w-br,y+h,br);
+    c.lineTo(x+bl,y+h); c.arcTo(x,y+h,x,y+h-bl,bl);
+    c.lineTo(x,y+tl); c.arcTo(x,y,x+tl,y,tl);
+    c.closePath();
+  }
+  function wrapLines(c, text, maxW){
+    const out = [];
+    for(const para of String(text).split('\n')){
+      const words = para.split(' ');
+      let line = '';
+      for(const w of words){
+        const test = line ? line + ' ' + w : w;
+        if(c.measureText(test).width > maxW && line){ out.push(line); line = w; }
+        else line = test;
+      }
+      out.push(line);
+    }
+    return out;
+  }
+
+  function drawNode(n){
+    const h = nodeHeight(n);
+    const sel = n.id === selectedId;
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,.45)'; ctx.shadowBlur = 10; ctx.shadowOffsetY = 3;
+    rr(ctx, n.x, n.y, nodeW, h, 7);
+    ctx.fillStyle = '#26262e'; ctx.fill();
+    ctx.restore();
+
+    rr(ctx, n.x, n.y, nodeW, 26, [7,7,0,0]);
+    ctx.fillStyle = nodeColor(n); ctx.fill();
+
+    ctx.strokeStyle = sel ? '#ffd166' : '#41414c';
+    ctx.lineWidth = sel ? 2.5 : 1.2;
+    rr(ctx, n.x, n.y, nodeW, h, 7);
+    ctx.stroke();
+
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 11.5px "Segoe UI", sans-serif';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.fillText(nodeTitle(n), n.x + 10, n.y + 13);
+
+    ctx.fillStyle = '#b9b9c4';
+    ctx.font = '11px "Segoe UI", sans-serif';
+    ctx.textBaseline = 'top';
+    ctx.save();
+    ctx.beginPath(); ctx.rect(n.x + 8, n.y + 30, nodeW - 16, h - 34); ctx.clip();
+    wrapLines(ctx, nodeSummary(n), nodeW - 16).slice(0,4).forEach((line,i) => {
+      ctx.fillText(line, n.x + 10, n.y + 34 + i*14);
+    });
+    ctx.restore();
+
+    if(nodeHasIn(n)){
+      const p = inPinPos(n);
+      ctx.beginPath(); ctx.arc(p.x, p.y, 5.5, 0, Math.PI*2);
+      ctx.fillStyle = '#1b1b22'; ctx.fill();
+      ctx.strokeStyle = '#8f8fa0'; ctx.lineWidth = 1.5; ctx.stroke();
+    }
+    const outs = nodeOuts(n);
+    outs.forEach((port,i) => {
+      const p = outPinPos(n,i);
+      ctx.beginPath(); ctx.arc(p.x, p.y, 5.5, 0, Math.PI*2);
+      ctx.fillStyle = '#1b1b22'; ctx.fill();
+      ctx.strokeStyle = '#8f8fa0'; ctx.lineWidth = 1.5; ctx.stroke();
+      if(outs.length > 1){
+        ctx.fillStyle = '#9a9aa8'; ctx.font = '9px "Segoe UI", sans-serif';
+        ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+        const label = port === 'true' ? 'True' : port === 'false' ? 'False' : 'Option ' + (i+1);
+        ctx.fillText(label, p.x - 9, p.y);
+      }
+    });
+  }
+
+  function hideAddMenu(){ if(menuEl){ menuEl.remove(); menuEl = null; } }
+  function showAddMenu(sx, sy){
+    hideAddMenu();
+    menuEl = div('bp-menu');
+    menuEl.style.left = sx + 'px';
+    menuEl.style.top = sy + 'px';
+    const g = toGraph(sx, sy);
+    const items = [
+      ['dialogue','Show Text'], ['choice','Show Choices'], ['branch','If Variable'],
+      ['setVar','Set Variable'], ['move','Move Character'], ['wait','Wait'],
+      ['changeMap','Change Map'], ['changeSprite','Change Sprite']
+    ];
+    for(const [type,label] of items){
+      const b = btn(label);
+      b.onclick = () => {
+        const props = type === 'branch' ? newCommand('if') : newCommand(type);
+        bp.nodes.push({id:uid('node'), type, x:g.x, y:g.y, props});
+        hideAddMenu();
+        if(onChange) onChange();
+      };
+      menuEl.appendChild(b);
+    }
+    container.appendChild(menuEl);
+  }
+
+  function bpDraw(){
+    if(destroyed) return;
+    const w = canvas.width/dpr, h = canvas.height/dpr;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.clearRect(0,0,w,h);
+    ctx.fillStyle = '#141419'; ctx.fillRect(0,0,w,h);
+    const step = 24 * view.k;
+    if(step > 6){
+      ctx.fillStyle = '#1d1d24';
+      const ox = ((view.x % step) + step) % step;
+      const oy = ((view.y % step) + step) % step;
+      for(let x=ox;x<w;x+=step) for(let y=oy;y<h;y+=step) ctx.fillRect(x,y,1.5,1.5);
+    }
+    ctx.save();
+    ctx.translate(view.x, view.y);
+    ctx.scale(view.k, view.k);
+
+    for(const l of bp.links){
+      const from = bp.nodes.find(n => n.id === l.from);
+      const to = bp.nodes.find(n => n.id === l.to);
+      if(!from || !to) continue;
+      const a = pinPos(from, l.port);
+      const b = pinPos(to, 'in');
+      const c = linkPath(a,b);
+      ctx.strokeStyle = '#7a7a8a';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(a.x,a.y);
+      ctx.bezierCurveTo(c.c1.x,c.c1.y,c.c2.x,c.c2.y,b.x,b.y);
+      ctx.stroke();
+    }
+
+    if(linking){
+      const from = bp.nodes.find(n => n.id === linking.fromId);
+      if(from){
+        const a = pinPos(from, linking.port);
+        const b = {x:linking.x, y:linking.y};
+        const c = linkPath(a,b);
+        ctx.strokeStyle = '#ffd166';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([6,5]);
+        ctx.beginPath();
+        ctx.moveTo(a.x,a.y);
+        ctx.bezierCurveTo(c.c1.x,c.c1.y,c.c2.x,c.c2.y,b.x,b.y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+    }
+
+    for(const n of bp.nodes) drawNode(n);
+    ctx.restore();
+
+    raf = requestAnimationFrame(bpDraw);
+  }
+
+  canvas.addEventListener('pointerdown', e => {
+    hideAddMenu();
+    const r = canvas.getBoundingClientRect();
+    const sx = e.clientX - r.left, sy = e.clientY - r.top;
+    const g = toGraph(sx,sy);
+    if(e.button === 2) return;
+    canvas.setPointerCapture(e.pointerId);
+    if(e.button === 1){ panning = {sx, sy, vx:view.x, vy:view.y}; return; }
+    const pin = hitPin(g.x,g.y);
+    if(pin && pin.port !== 'in'){
+      linking = {fromId:pin.node.id, port:pin.port, x:g.x, y:g.y};
+      return;
+    }
+    const node = hitNode(g.x,g.y);
+    if(node){
+      selectedId = node.id;
+      dragNode = node;
+      dragOff = {x:g.x-node.x, y:g.y-node.y};
+      return;
+    }
+    selectedId = null;
+    panning = {sx, sy, vx:view.x, vy:view.y};
+  });
+
+  canvas.addEventListener('pointermove', e => {
+    const r = canvas.getBoundingClientRect();
+    const sx = e.clientX - r.left, sy = e.clientY - r.top;
+    const g = toGraph(sx,sy);
+    if(dragNode){
+      dragNode.x = g.x - dragOff.x;
+      dragNode.y = g.y - dragOff.y;
+      if(onChange) onChange();
+      return;
+    }
+    if(linking){ linking.x = g.x; linking.y = g.y; return; }
+    if(panning){
+      view.x = panning.vx + (sx - panning.sx);
+      view.y = panning.vy + (sy - panning.sy);
+    }
+  });
+
+  canvas.addEventListener('pointerup', e => {
+    const r = canvas.getBoundingClientRect();
+    const sx = e.clientX - r.left, sy = e.clientY - r.top;
+    const g = toGraph(sx,sy);
+    if(linking){
+      const pin = hitPin(g.x,g.y);
+      if(pin && pin.port === 'in' && pin.node.id !== linking.fromId){
+        bp.links = bp.links.filter(l => l.to !== pin.node.id);
+        bp.links.push({id:uid('link'), from:linking.fromId, port:linking.port, to:pin.node.id});
+        if(onChange) onChange();
+      }
+      linking = null;
+    }
+    dragNode = null;
+    panning = null;
+  });
+
+  canvas.addEventListener('contextmenu', e => {
+    e.preventDefault();
+    const r = canvas.getBoundingClientRect();
+    const sx = e.clientX - r.left, sy = e.clientY - r.top;
+    const g = toGraph(sx,sy);
+    const link = hitLink(g.x,g.y);
+    if(link){
+      bp.links = bp.links.filter(l => l !== link);
+      if(onChange) onChange();
+      return;
+    }
+    showAddMenu(sx,sy);
+  });
+
+  canvas.addEventListener('wheel', e => {
+    e.preventDefault();
+    const r = canvas.getBoundingClientRect();
+    const sx = e.clientX - r.left, sy = e.clientY - r.top;
+    const g = toGraph(sx,sy);
+    const k = clamp(view.k * (e.deltaY < 0 ? 1.12 : 0.89), 0.3, 2.5);
+    view.k = k;
+    view.x = sx - g.x*k;
+    view.y = sy - g.y*k;
+  }, {passive:false});
+
+  canvas.addEventListener('dblclick', e => {
+    const r = canvas.getBoundingClientRect();
+    const sx = e.clientX - r.left, sy = e.clientY - r.top;
+    const g = toGraph(sx,sy);
+    const node = hitNode(g.x,g.y);
+    if(node && node.type !== 'entry'){
+      editCommand(node.props, () => { if(onChange) onChange(); });
+    }
+  });
+
+  function onKey(e){
+    const tag = (document.activeElement && document.activeElement.tagName) || '';
+    if((e.key === 'Delete' || e.key === 'Backspace') && selectedId &&
+       !/INPUT|TEXTAREA|SELECT/.test(tag)){
+      bp.nodes = bp.nodes.filter(n => n.id !== selectedId);
+      bp.links = bp.links.filter(l => l.from !== selectedId && l.to !== selectedId);
+      selectedId = null;
+      if(onChange) onChange();
+      e.preventDefault();
+    }
+  }
+  window.addEventListener('keydown', onKey);
+
+  bpDraw();
+
+  return {
+    destroy(){
+      destroyed = true;
+      cancelAnimationFrame(raf);
+      ro.disconnect();
+      window.removeEventListener('keydown', onKey);
+      hideAddMenu();
+      container.innerHTML = '';
+    }
+  };
+}
+
+/* =====================================================================
+   EVENT EDITOR (tabs + blueprint)
+   ===================================================================== */
+function openEventEditor(ev){
+  const map = getCurrentMap();
+  if(!map) return;
+  const draft = deep(ev);
+  if(!draft.blueprint) draft.blueprint = {nodes:[], links:[]};
+  if(!draft.commands) draft.commands = [];
+
+  const overlay = div('modal-overlay');
+  const modal = div('modal');
+  modal.style.width = 'min(1040px, 96vw)';
+  modal.style.height = '86vh';
+
+  const head = div('modal-head');
+  const titleEl = document.createElement('span');
+  titleEl.textContent = 'Event Editor — ' + (draft.name || 'Event');
+  const xBtn = btn('✕','modal-x');
+  head.append(titleEl, xBtn);
+
+  const body = div('modal-body');
+  body.style.cssText = 'padding:0;display:flex;flex-direction:column;overflow:hidden;';
+
+  const tabs = div('tabs');
+  const tabCmd = btn('Commands','tab active');
+  const tabAdv = btn('Advanced (Blueprint)','tab');
+  tabs.append(tabCmd, tabAdv);
+
+  /* ----- commands pane ----- */
+  const paneCmd = div();
+  paneCmd.style.cssText = 'flex:1;overflow-y:auto;padding:16px;display:block;';
+  const wrap = div();
+
+  const nameIn = mkInput('text', draft.name);
+  const xIn = mkInput('number', draft.x, {min:0, max:map.cols-1});
+  const yIn = mkInput('number', draft.y, {min:0, max:map.rows-1});
+  const row1 = div('field-row');
+  row1.append(field('X', xIn), field('Y', yIn));
+
+  const trigIn = mkSelect([
+    {value:'action', label:'Action Button (player presses Space in front)'},
+    {value:'touch', label:'Player Touch (walks onto it)'},
+    {value:'autorun', label:'Autorun (runs once when the map starts)'}
+  ], draft.trigger);
+
+  const charSheets = project.spritesheets.filter(s => !s.isTileset);
+  const sheetIn = mkSelect([{value:'', label:'— none (blue marker) —'}]
+    .concat(charSheets.map(s => ({value:s.id, label:s.name}))), draft.spriteSheetId || '');
+  const dirIn = mkSelect(DIR_LIST.map(d => ({value:d, label:d[0].toUpperCase()+d.slice(1)})), draft.dir || 'down');
+  const dirRow = div('field-row');
+  dirRow.append(field('Sprite Sheet', sheetIn), field('Facing', dirIn));
+
+  const solidChk = mkCheck(draft.solid !== false);
+  const solidRow = document.createElement('label');
+  solidRow.className = 'check-row';
+  solidRow.append(solidChk, document.createTextNode('Solid (blocks the player)'));
+
+  wrap.append(field('Event name', nameIn), row1, field('Trigger', trigIn), dirRow, solidRow);
+
+  const cmdHeader = div();
+  cmdHeader.style.cssText = 'font-size:11.5px;color:#8b8b8b;text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin:16px 0 8px;border-top:1px solid var(--border);padding-top:14px;';
+  cmdHeader.textContent = 'Commands';
+  wrap.appendChild(cmdHeader);
+
+  const cmdRoot = div();
+  cmdRoot.style.cssText = 'max-height:340px;overflow-y:auto;padding-right:4px;';
+  wrap.appendChild(cmdRoot);
+  buildCommandEditor(cmdRoot, draft.commands, () => {});
+  paneCmd.appendChild(wrap);
+
+  /* ----- advanced pane ----- */
+  const paneAdv = div();
+  paneAdv.style.cssText = 'flex:1;display:none;flex-direction:column;padding:12px;min-height:0;';
+
+  const advRow = div();
+  advRow.style.cssText = 'display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-shrink:0;';
+  const useBpChk = mkCheck(!!draft.useBlueprint);
+  const useLbl = document.createElement('label');
+  useLbl.className = 'check-row';
+  useLbl.style.margin = '0';
+  useLbl.append(useBpChk, document.createTextNode('Use blueprint graph (overrides command list)'));
+  const info = document.createElement('span');
+  info.style.cssText = 'font-size:11.5px;color:#8b8b8b;margin-left:auto;';
+  const clearBtn = btn('Clear Graph');
+  clearBtn.onclick = () => {
+    if(!confirm('Clear the blueprint graph?')) return;
+    draft.blueprint = {nodes:[{id:uid('node'), type:'entry', x:40, y:120}], links:[]};
+    if(bpEditor){ bpEditor.destroy(); bpEditor = null; }
+    ensureBp();
+  };
+  advRow.append(useLbl, info, clearBtn);
+
+  const graphWrap = div();
+  graphWrap.style.cssText = 'flex:1;min-height:0;border:1px solid var(--border);border-radius:6px;overflow:hidden;background:#141419;';
+  paneAdv.append(advRow, graphWrap);
+
+  let bpEditor = null;
+  function updateAdvInfo(){
+    info.textContent = `${draft.blueprint.nodes.length} nodes · ${draft.blueprint.links.length} links`;
+  }
+  function ensureBp(){
+    if(bpEditor) return;
+    bpEditor = mountBlueprintEditor(graphWrap, draft, () => updateAdvInfo());
+    updateAdvInfo();
+  }
+  useBpChk.onchange = () => { draft.useBlueprint = useBpChk.checked; };
+
+  function setTab(adv){
+    tabCmd.classList.toggle('active', !adv);
+    tabAdv.classList.toggle('active', adv);
+    paneCmd.style.display = adv ? 'none' : 'block';
+    paneAdv.style.display = adv ? 'flex' : 'none';
+    if(adv) ensureBp();
+  }
+  tabCmd.onclick = () => setTab(false);
+  tabAdv.onclick = () => setTab(true);
+
+  body.append(tabs, paneCmd, paneAdv);
+
+  /* ----- footer ----- */
+  const foot = div('modal-foot');
+  const cancelB = btn('Cancel');
+  const delB = btn('Delete Event','danger');
+  const okB = btn('OK','primary');
+  foot.append(cancelB, delB, okB);
+  modal.append(head, body, foot);
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+
+  function close(){
+    if(bpEditor){ bpEditor.destroy(); bpEditor = null; }
+    overlay.remove();
+  }
+  xBtn.onclick = close;
+  cancelB.onclick = close;
+
+  delB.onclick = () => {
+    map.events = map.events.filter(e => e.id !== ev.id);
+    if(editor.selectedEventId === ev.id) editor.selectedEventId = null;
+    map.rev = (map.rev||0) + 1;
+    markDirty();
+    close();
+  };
+
+  okB.onclick = () => {
+    draft.name = nameIn.value.trim() || 'Event';
+    draft.x = clamp(parseInt(xIn.value) || 0, 0, map.cols-1);
+    draft.y = clamp(parseInt(yIn.value) || 0, 0, map.rows-1);
+    draft.trigger = trigIn.value;
+    draft.spriteSheetId = sheetIn.value || null;
+    draft.dir = dirIn.value;
+    draft.solid = solidChk.checked;
+    draft.useBlueprint = useBpChk.checked;
+    Object.assign(ev, draft);
+    map.rev = (map.rev||0) + 1;
+    markDirty();
+    close();
+  };
+}
+
+/* =====================================================================
+   PROJECT SETTINGS
+   ===================================================================== */
+function openProjectSettings(){
+  const wrap = div();
+  const nameIn = mkInput('text', project.name);
+  wrap.append(field('Project name', nameIn));
+
+  const varHeader = div();
+  varHeader.style.cssText = 'font-size:11.5px;color:#8b8b8b;text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin:16px 0 8px;border-top:1px solid var(--border);padding-top:14px;';
+  varHeader.textContent = 'Variables (default values)';
+  wrap.appendChild(varHeader);
+
+  const varBox = div();
+  varBox.style.cssText = 'display:flex;flex-direction:column;gap:6px;';
+  wrap.appendChild(varBox);
+
+  const vars = deep(project.variables || {});
+  const rebuildVars = () => {
+    varBox.innerHTML = '';
+    const keys = Object.keys(vars);
+    if(!keys.length){
+      const e = div('pal-hint'); e.style.padding = '0';
+      e.textContent = 'No variables yet. Add one below — use them in If / Set Variable commands.';
+      varBox.appendChild(e);
+    }
+    keys.forEach(k => {
+      const r = div();
+      r.style.cssText = 'display:flex;gap:6px;';
+      const kIn = mkInput('text', k);
+      const vIn = mkInput('text', vars[k]);
+      kIn.onchange = () => {
+        const nk = kIn.value.trim();
+        if(!nk || nk === k){ kIn.value = k; return; }
+        vars[nk] = vars[k]; delete vars[k]; rebuildVars();
+      };
+      vIn.oninput = () => { vars[k] = vIn.value; };
+      const del = btn('✕','danger');
+      del.onclick = () => { delete vars[k]; rebuildVars(); };
+      r.append(kIn, vIn, del);
+      varBox.appendChild(r);
+    });
+    const add = btn('+ Add variable');
+    add.onclick = () => {
+      const n = 'variable' + (Object.keys(vars).length + 1);
+      vars[n] = '0'; rebuildVars();
+    };
+    varBox.appendChild(add);
+  };
+  rebuildVars();
+
+  openModal({
+    title:'Project Settings',
+    width: 520,
+    body: wrap,
+    buttons: [
+      {label:'Cancel'},
+      {label:'Apply', kind:'primary', onClick:(close) => {
+        project.name = nameIn.value.trim() || 'Untitled Project';
+        project.variables = vars;
+        markDirty();
+        close();
+      }}
+    ]
+  });
+}
+
+/* =====================================================================
+   UI EDITOR
+   ===================================================================== */
+let uiScale = 1;
+function layoutUiStage(){
+  const wrap = $('#uiEditorWrap');
+  const stage = $('#uiStage');
+  const c = $('#uiCanvas');
+  const ui = project.ui;
+  if(!c || !stage) return;
+  if(c.width !== ui.width || c.height !== ui.height){
+    c.width = ui.width; c.height = ui.height;
+  }
+  const pad = 40;
+  const aw = Math.max(80, wrap.clientWidth - pad*2);
+  const ah = Math.max(80, wrap.clientHeight - pad*2);
+  uiScale = Math.min(1, aw/ui.width, ah/ui.height);
+  c.style.width = (ui.width*uiScale) + 'px';
+  c.style.height = (ui.height*uiScale) + 'px';
+  stage.style.width = c.style.width;
+  stage.style.height = c.style.height;
+  c.style.imageRendering = 'pixelated';
+}
+
+function uiBounds(ctx, el){
+  if(el.type === 'sprite') return {x:el.x, y:el.y, w:el.w, h:el.h};
+  ctx.save();
+  ctx.font = `${el.bold ? 'bold ' : ''}${el.fontSize}px "Segoe UI", sans-serif`;
+  const m = ctx.measureText(el.text || '');
+  const w = m.width;
+  const h = el.fontSize * 1.3;
+  let x = el.x;
+  if(el.align === 'center') x -= w/2;
+  else if(el.align === 'right') x -= w;
+  ctx.restore();
+  return {x, y:el.y, w, h};
+}
+
+function drawUiElement(c, el){
+  if(el.type === 'sprite'){
+    const sheet = getSheet(el.sheetId);
+    const img = sheet ? getImg(sheet) : null;
+    if(img && img.complete && img.naturalWidth){
+      const fw = sheet.frameW, fh = sheet.frameH;
+      const idx = el.frameIndex || 0;
+      const sx = (idx % sheet.cols) * fw;
+      const sy = Math.floor(idx / sheet.cols) * fh;
+      c.drawImage(img, sx, sy, fw, fh, el.x, el.y, el.w, el.h);
+    } else {
+      c.fillStyle = 'rgba(255,120,120,.25)';
+      c.fillRect(el.x, el.y, el.w, el.h);
+      c.strokeStyle = 'rgba(255,120,120,.6)'; c.lineWidth = 1;
+      c.strokeRect(el.x+.5, el.y+.5, el.w-1, el.h-1);
+    }
+  } else {
+    c.font = `${el.bold ? 'bold ' : ''}${el.fontSize}px "Segoe UI", sans-serif`;
+    c.fillStyle = el.color || '#ffffff';
+    c.textAlign = el.align || 'left';
+    c.textBaseline = 'top';
+    c.fillText(el.text || '', el.x, el.y);
+  }
+}
+
+function drawUiEditor(){
+  const c = $('#uiCanvas');
+  if(!c) return;
+  const ctx = c.getContext('2d');
+  const ui = project.ui;
+  ctx.imageSmoothingEnabled = false;
+  ctx.fillStyle = '#1b1b1f';
+  ctx.fillRect(0,0,ui.width,ui.height);
+  ctx.strokeStyle = 'rgba(255,255,255,.04)';
+  ctx.lineWidth = 1;
+  for(let x=0;x<ui.width;x+=20){ ctx.beginPath(); ctx.moveTo(x+.5,0); ctx.lineTo(x+.5,ui.height); ctx.stroke(); }
+  for(let y=0;y<ui.height;y+=20){ ctx.beginPath(); ctx.moveTo(0,y+.5); ctx.lineTo(ui.width,y+.5); ctx.stroke(); }
+
+  for(const el of ui.elements) drawUiElement(ctx, el);
+
+  const sel = ui.elements.find(e => e.id === editor.selectedUiId);
+  if(sel){
+    const b = uiBounds(ctx, sel);
+    ctx.strokeStyle = '#ffd166';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5,4]);
+    ctx.strokeRect(b.x-2, b.y-2, b.w+4, b.h+4);
+    ctx.setLineDash([]);
+  }
+}
+
+function renderUiElementList(){
+  const el = $('#uiElementList');
+  if(!el) return;
+  el.innerHTML = '';
+  const ui = project.ui;
+  if(!ui.elements.length){
+    el.innerHTML = '<div class="empty-hint">No UI elements yet. Add a sprite or text.</div>';
+    return;
+  }
+  for(const e of ui.elements){
+    const d = div('tree-item' + (e.id === editor.selectedUiId ? ' selected' : ''));
+    const label = e.type === 'sprite'
+      ? `Sprite: ${sheetName(e.sheetId) || '—'}`
+      : `Text: ${(e.text || '').slice(0,22)}`;
+    d.innerHTML = `<span class="ico">${e.type === 'sprite' ? '▣' : 'T'}</span><span class="nm">${esc(label)}</span>
+      <span class="row-btns"><button data-act="del">✕</button></span>`;
+    d.onclick = ev => {
+      if(ev.target.dataset && ev.target.dataset.act === 'del'){
+        project.ui.elements = project.ui.elements.filter(x => x.id !== e.id);
+        if(editor.selectedUiId === e.id) editor.selectedUiId = null;
+        renderUiElementList(); markDirty(); return;
+      }
+      editor.selectedUiId = e.id;
+      renderUiElementList();
+    };
+    d.ondblclick = () => openUiElementProps(e);
+    el.appendChild(d);
+  }
+}
+
+function openAddSpriteElement(){
+  const sheets = project.spritesheets;
+  if(!sheets.length){ toast('Import a sprite sheet first'); return; }
+  const wrap = div();
+  const sheetSel = mkSelect(sheets.map(s => ({value:s.id, label:s.name})), sheets[0].id);
+  const preview = document.createElement('canvas');
+  preview.style.cssText = 'display:block;background:#141414;border:1px solid var(--border);border-radius:4px;cursor:pointer;image-rendering:pixelated;max-width:100%;';
+  let frameIndex = 0;
+
+  function redraw(){
+    const sheet = getSheet(sheetSel.value);
+    const img = getImg(sheet);
+    if(!img.complete || !img.naturalWidth){
+      preview.width = 200; preview.height = 100;
+      return;
+    }
+    const scale = Math.min(1, 320/img.width);
+    preview.width = Math.round(img.width*scale);
+    preview.height = Math.round(img.height*scale);
+    const c = preview.getContext('2d');
+    c.imageSmoothingEnabled = false;
+    c.drawImage(img, 0, 0, preview.width, preview.height);
+    const cw = sheet.frameW*scale, ch = sheet.frameH*scale;
+    c.strokeStyle = 'rgba(255,255,255,.2)';
+    for(let x=0;x<=sheet.cols;x++){ c.beginPath(); c.moveTo(x*cw+.5,0); c.lineTo(x*cw+.5,preview.height); c.stroke(); }
+    for(let y=0;y<=sheet.rows;y++){ c.beginPath(); c.moveTo(0,y*ch+.5); c.lineTo(preview.width,y*ch+.5); c.stroke(); }
+    const col = frameIndex % sheet.cols, row = Math.floor(frameIndex/sheet.cols);
+    c.strokeStyle = '#ffd166'; c.lineWidth = 2;
+    c.strokeRect(col*cw+1, row*ch+1, cw-2, ch-2);
+  }
+
+  preview.onpointerdown = e => {
+    const sheet = getSheet(sheetSel.value);
+    if(!sheet) return;
+    const r = preview.getBoundingClientRect();
+    const sx = preview.width / r.width;
+    const sy = preview.height / r.height;
+    const mx = (e.clientX - r.left) * sx;
+    const my = (e.clientY - r.top) * sy;
+    const scale = preview.width / img.width;
+    const col = Math.floor(mx / (sheet.frameW * scale));
+    const row = Math.floor(my / (sheet.frameH * scale));
+    if(col < 0 || row < 0 || col >= sheet.cols || row >= sheet.rows) return;
+    frameIndex = row*sheet.cols + col;
+    redraw();
+  };
+  sheetSel.onchange = () => { frameIndex = 0; redraw(); };
+
+  wrap.append(field('Sprite sheet', sheetSel), field('Preview', preview));
+  const img = getImg(getSheet(sheetSel.value));
+  if(img) img.addEventListener('load', redraw, {once:true});
+  setTimeout(redraw, 30);
+
+  openModal({
+    title:'Add UI Sprite',
+    width: 520,
+    body: wrap,
+    buttons: [
+      {label:'Cancel'},
+      {label:'Add', kind:'primary', onClick:(close) => {
+        const sheet = getSheet(sheetSel.value);
+        if(!sheet) return;
+        project.ui.elements.push({
+          id:uid('ui'), type:'sprite', x:20, y:20,
+          w:sheet.frameW, h:sheet.frameH,
+          sheetId:sheet.id, frameIndex
+        });
+        editor.selectedUiId = project.ui.elements[project.ui.elements.length-1].id;
+        renderUiElementList(); markDirty(); close();
+      }}
+    ]
+  });
+}
+
+function openUiElementProps(el){
+  const wrap = div();
+  let apply = () => {};
+  if(el.type === 'sprite'){
+    const sheets = project.spritesheets.filter(s => s.src);
+    const sheetSel = mkSelect(sheets.map(s => ({value:s.id, label:s.name})), el.sheetId);
+    const frameIn = mkInput('number', el.frameIndex || 0, {min:0});
+    const wIn = mkInput('number', el.w, {min:1});
+    const hIn = mkInput('number', el.h, {min:1});
+    const sizeRow = div('field-row');
+    sizeRow.append(field('Width', wIn), field('Height', hIn));
+    wrap.append(field('Sprite sheet', sheetSel), field('Frame index', frameIn), sizeRow);
+    apply = () => {
+      el.sheetId = sheetSel.value;
+      el.frameIndex = Math.max(0, parseInt(frameIn.value) || 0);
+      el.w = Math.max(1, parseInt(wIn.value) || 1);
+      el.h = Math.max(1, parseInt(hIn.value) || 1);
+    };
+  } else {
+    const textIn = mkTextarea(el.text || '');
+    textIn.style.minHeight = '70px';
+    const fsIn = mkInput('number', el.fontSize || 20, {min:6, max:200});
+    const colorIn = mkInput('color', el.color || '#ffffff');
+    const boldChk = mkCheck(el.bold);
+    const alignSel = mkSelect([
+      {value:'left', label:'Left'}, {value:'center', label:'Center'}, {value:'right', label:'Right'}
+    ], el.align || 'left');
+    const row = div('field-row');
+    row.append(field('Font size', fsIn), field('Color', colorIn));
+    const boldRow = document.createElement('label');
+    boldRow.className = 'check-row';
+    boldRow.append(boldChk, document.createTextNode('Bold'));
+    wrap.append(field('Text (use {variable} for dynamic values)', textIn), row, field('Align', alignSel), boldRow);
+    apply = () => {
+      el.text = textIn.value;
+      el.fontSize = clamp(parseInt(fsIn.value) || 20, 6, 200);
+      el.color = colorIn.value;
+      el.bold = boldChk.checked;
+      el.align = alignSel.value;
+    };
+  }
+
+  openModal({
+    title:'UI Element',
+    width: 480,
+    body: wrap,
+    buttons: [
+      {label:'Cancel'},
+      {label:'Delete', kind:'danger', onClick:(close) => {
+        project.ui.elements = project.ui.elements.filter(x => x.id !== el.id);
+        if(editor.selectedUiId === el.id) editor.selectedUiId = null;
+        renderUiElementList(); markDirty(); close();
+      }},
+      {label:'OK', kind:'primary', onClick:(close) => { apply(); renderUiElementList(); markDirty(); close(); }}
+    ]
+  });
+}
+
+/* UI canvas interactions */
+const uiCanvas = $('#uiCanvas');
+let uiDrag = null;
+uiCanvas.addEventListener('pointerdown', e => {
+  if(editor.view !== 'ui') return;
+  const r = uiCanvas.getBoundingClientRect();
+  const px = (e.clientX - r.left) / uiScale;
+  const py = (e.clientY - r.top) / uiScale;
+  const ctx = uiCanvas.getContext('2d');
+  const els = project.ui.elements;
+  for(let i=els.length-1;i>=0;i--){
+    const b = uiBounds(ctx, els[i]);
+    if(px >= b.x-2 && px <= b.x+b.w+2 && py >= b.y-2 && py <= b.y+b.h+2){
+      editor.selectedUiId = els[i].id;
+      uiDrag = {el:els[i], dx: px - els[i].x, dy: py - els[i].y};
+      renderUiElementList();
+      uiCanvas.setPointerCapture(e.pointerId);
+      return;
+    }
+  }
+  editor.selectedUiId = null;
+  renderUiElementList();
+});
+uiCanvas.addEventListener('pointermove', e => {
+  if(!uiDrag) return;
+  const r = uiCanvas.getBoundingClientRect();
+  const px = (e.clientX - r.left) / uiScale;
+  const py = (e.clientY - r.top) / uiScale;
+  uiDrag.el.x = Math.round((px - uiDrag.dx) * 10) / 10;
+  uiDrag.el.y = Math.round((py - uiDrag.dy) * 10) / 10;
+  markDirty();
+});
+window.addEventListener('pointerup', () => { uiDrag = null; });
+uiCanvas.addEventListener('dblclick', e => {
+  if(editor.view !== 'ui') return;
+  const r = uiCanvas.getBoundingClientRect();
+  const px = (e.clientX - r.left) / uiScale;
+  const py = (e.clientY - r.top) / uiScale;
+  const ctx = uiCanvas.getContext('2d');
+  const els = project.ui.elements;
+  for(let i=els.length-1;i>=0;i--){
+    const b = uiBounds(ctx, els[i]);
+    if(px >= b.x-2 && px <= b.x+b.w+2 && py >= b.y-2 && py <= b.y+b.h+2){
+      openUiElementProps(els[i]);
+      return;
+    }
+  }
+});
+
+$('#ui-add-sprite').onclick = openAddSpriteElement;
+$('#ui-add-text').onclick = () => {
+  const el = {id:uid('ui'), type:'text', x:40, y:40, text:'Text {variable}', fontSize:22, color:'#ffffff', bold:false, align:'left'};
+  project.ui.elements.push(el);
+  editor.selectedUiId = el.id;
+  renderUiElementList(); markDirty();
+  openUiElementProps(el);
+};
+
+window.addEventListener('resize', () => {
+  if(editor.view === 'ui') layoutUiStage();
+  if(game.active) resizePlayCanvas();
+});
+
+/* =====================================================================
+   GAME
+   ===================================================================== */
+const game = {
+  active:false, map:null, events:[], player:null,
+  variables:{}, dialogue:null, choice:null,
+  script:null, startDelay:0, time:0
+};
+
+const keysDown = new Set();
+const keysPressed = new Set();
+const pressed = code => keysPressed.has(code);
+
+window.addEventListener('keydown', e => {
+  const tag = (document.activeElement && document.activeElement.tagName) || '';
+  if(game.active && (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT')) return;
+
+  if(!keysDown.has(e.code)) keysPressed.add(e.code);
+  keysDown.add(e.code);
+
+  if(game.active){
+    if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space','Enter'].includes(e.code)) e.preventDefault();
+    if(e.code === 'Escape') stopPlay();
+  } else if(editor.view === 'ui' && (e.key === 'Delete' || e.key === 'Backspace') &&
+            !/INPUT|TEXTAREA|SELECT/.test(tag) && editor.selectedUiId){
+    project.ui.elements = project.ui.elements.filter(x => x.id !== editor.selectedUiId);
+    editor.selectedUiId = null;
+    renderUiElementList(); markDirty();
+    e.preventDefault();
+  }
+});
+window.addEventListener('keyup', e => keysDown.delete(e.code));
+window.addEventListener('blur', () => keysDown.clear());
+
+$('#btn-play').onclick = () => { if(game.active) stopPlay(); else startPlay(); };
+$('#btn-new').onclick = () => { if(confirm('Start a new project? Unsaved work will be lost.')) newProject(); };
+$('#btn-save').onclick = saveProjectFile;
+$('#btn-load').onclick = () => $('#fileProject').click();
+$('#btn-mapsettings').onclick = () => { const m = getCurrentMap(); if(m) openMapSettings(m); else openMapSettings(null); };
+$('#btn-projectsettings').onclick = openProjectSettings;
+
+/* World "+ New" menu */
+$('#btn-new-world').onclick = (e) => {
+  showPopupMenu(e.currentTarget, [
+    { label:'🗺  Map', onClick: () => openMapSettings(null) },
+    { label:'☺  Player', onClick: () => addPlayer() },
+    { sep:true },
+    { label:'◆  NPC  (use map Events)', onClick: () => toast('NPCs: place an Event on a map for now.') },
+    { label:'📦  Chest  (use map Events)', onClick: () => toast('Chests: place an Event on a map for now.') }
+  ]);
+};
+
+$('#fileProject').onchange = e => {
+  const f = e.target.files[0]; if(!f) return;
+  const rd = new FileReader();
+  rd.onload = () => {
+    try { loadProjectData(JSON.parse(rd.result)); }
+    catch(err){ toast('Could not read project file'); console.error(err); }
+  };
+  rd.readAsText(f);
+  e.target.value = '';
+};
+
+/* --------------------------- movement helpers ---------------------- */
+const HITBOX = 0.30;
+
+function tileSolid(map, tx, ty, events, ignore){
+  if(tx < 0 || ty < 0 || tx >= map.cols || ty >= map.rows) return true;
+  if(map.layers.collision[ty*map.cols + tx] === 1) return true;
+  for(const e of events){
+    if(e === ignore) continue;
+    if(e.solid === false) continue;
+    if(Math.round(e.px) === tx && Math.round(e.py) === ty) return true;
+  }
+  return false;
+}
+function boxBlocked(px, py, events, ignore){
+  const x0 = Math.floor(px - HITBOX), x1 = Math.floor(px + HITBOX);
+  const y0 = Math.floor(py - HITBOX), y1 = Math.floor(py + HITBOX);
+  for(let ty=y0; ty<=y1; ty++)
+    for(let tx=x0; tx<=x1; tx++)
+      if(tileSolid(game.map, tx, ty, events, ignore)) return true;
+  return false;
+}
+
+/* Scripted / tweened movement. Only runs when ent.moving is set by startEntityMove. */
+function startEntityMove(ent, dir){
+  const d = DIRS[dir] || DIRS.down;
+  ent.dir = dir;
+  ent.fromPx = Math.round(ent.px);
+  ent.fromPy = Math.round(ent.py);
+  ent.toPx = ent.fromPx + d.x;
+  ent.toPy = ent.fromPy + d.y;
+  ent.px = ent.fromPx; ent.py = ent.fromPy;
+  ent.moving = true; ent.t = 0;
+}
+function updateEntityMove(ent, dt, speed){
+  if(!ent.moving) return;
+  ent.t += dt * (speed || 5);
+  if(ent.t >= 1){
+    ent.px = ent.toPx; ent.py = ent.toPy;
+    ent.moving = false; ent.t = 0;
+  } else {
+    ent.px = ent.fromPx + (ent.toPx - ent.fromPx) * ent.t;
+    ent.py = ent.fromPy + (ent.toPy - ent.fromPy) * ent.t;
+  }
+}
+
+/* --------------------------- start / stop -------------------------- */
+function isBlockedCell(map, x, y, events, ignoreId){
+  if(x < 0 || y < 0 || x >= map.cols || y >= map.rows) return true;
+  if(map.layers.collision[y*map.cols + x] === 1) return true;
+  if(events){
+    for(const e of events){
+      if(e.solid === false) continue;
+      if(ignoreId && e.id === ignoreId) continue;
+      if(Math.round(e.px) === x && Math.round(e.py) === y) return true;
+    }
+  }
+  return false;
+}
+function findStartCell(map, events){
+  const s = project.settings;
+  let sx = (s.startMapId === map.id) ? s.startX : 1;
+  let sy = (s.startMapId === map.id) ? s.startY : 1;
+  sx = clamp(sx|0, 0, map.cols-1); sy = clamp(sy|0, 0, map.rows-1);
+  if(!isBlockedCell(map, sx, sy, events, null)) return {x:sx, y:sy};
+  for(let r=1; r<Math.max(map.cols, map.rows); r++){
+    for(let dy=-r; dy<=r; dy++){
+      for(let dx=-r; dx<=r; dx++){
+        if(Math.max(Math.abs(dx),Math.abs(dy)) !== r) continue;
+        const nx = sx+dx, ny = sy+dy;
+        if(!isBlockedCell(map, nx, ny, events, null)) return {x:nx, y:ny};
+      }
+    }
+  }
+  return {x:0, y:0};
+}
+
+function startPlay(){
+  const map = getCurrentMap();
+  if(!map){ toast('Open a map first'); return; }
+
+  const pp = getPrimaryPlayer();
+
+  game.active = true;
+  game.map = map;
+  game.events = map.events.map(e => ({
+    ...deep(e), px: e.x, py: e.y, dir: e.dir || 'down',
+    moving:false, walking:false, t:0, fromPx:e.x, fromPy:e.y, toPx:e.x, toPy:e.y, anim:0,
+    sheetId: e.spriteSheetId || null
+  }));
+  game.variables = deep(project.variables || {});
+  game.dialogue = null;
+  game.choice = null;
+  game.script = null;
+  game.startDelay = 0.35;
+  game.time = 0;
+
+  const start = findStartCell(map, game.events);
+  game.player = {
+    px:start.x, py:start.y, fromPx:start.x, fromPy:start.y, toPx:start.x, toPy:start.y,
+    dir:'down', moving:false, walking:false, t:0, anim:0,
+    sheetId: pp ? pp.sheetId : null,
+    speed: pp ? (pp.speed || 5) : 5
+  };
+
+  document.body.classList.add('playing');
+  $('#st-play').style.display = 'inline';
+  $('#btn-play').textContent = '■ Stop Test';
+  canvas.style.width = ''; canvas.style.height = '';
+  resizePlayCanvas();
+  keysDown.clear(); keysPressed.clear();
+}
+
+function stopPlay(){
+  game.active = false;
+  game.script = null;
+  game.dialogue = null;
+  game.choice = null;
+  document.body.classList.remove('playing');
+  $('#st-play').style.display = 'none';
+  $('#btn-play').textContent = '▶ Play Test';
+  keysDown.clear(); keysPressed.clear();
+  mapCacheKey = '';
+  if(editor.view === 'ui') layoutUiStage(); else applyZoom();
+}
+
+function resizePlayCanvas(){
+  const wrap = $('#canvasWrap');
+  canvas.width  = Math.max(320, wrap.clientWidth);
+  canvas.height = Math.max(240, wrap.clientHeight);
+  ctx2d.imageSmoothingEnabled = false;
+}
+
+/* --------------------------- interpreter --------------------------- */
+function startScript(gen, ctx){
+  game.script = { gen, ctx, wait:null };
+  advanceScript();
+}
+function advanceScript(){
+  const s = game.script;
+  if(!s) return;
+  try {
+    for(;;){
+      const r = s.gen.next();
+      if(r.done){ game.script = null; return; }
+      const w = r.value;
+      if(w && w.waitFor){ s.wait = w; return; }
+    }
+  } catch(err){
+    console.error('Script error:', err);
+    game.script = null;
+    game.dialogue = null;
+    game.choice = null;
+  }
+}
+
+function compare(a, op, b){
+  const na = Number(a), nb = Number(b);
+  const numeric = !Number.isNaN(na) && !Number.isNaN(nb) && a !== '' && b !== '';
+  const A = numeric ? na : String(a ?? '');
+  const B = numeric ? nb : String(b ?? '');
+  switch(op){
+    case '==': return A == B;   // eslint-disable-line eqeqeq
+    case '!=': return A != B;   // eslint-disable-line eqeqeq
+    case '>':  return A > B;
+    case '<':  return A < B;
+    case '>=': return A >= B;
+    case '<=': return A <= B;
+    default: return false;
+  }
+}
+
+function resolveTarget(t, ctx){
+  if(t === 'player') return game.player;
+  if(t === 'this') return ctx && ctx.event ? ctx.event : null;
+  if(typeof t === 'string' && t.startsWith('evt_')){
+    const id = t.slice(4);
+    return game.events.find(e => e.id === id) || null;
+  }
+  return null;
+}
+
+function* runCommands(cmds, ctx){
+  for(const c of (cmds || [])) yield* runCommand(c, ctx);
+}
+
+function* runCommand(c, ctx){
+  switch(c.type){
+    case 'dialogue': {
+      game.dialogue = { speaker: c.speaker || '', text: c.text || '' };
+      yield { waitFor:'input' };
+      game.dialogue = null;
+      break;
+    }
+    case 'choice': {
+      const opts = (c.options || []).map(o => o.text);
+      if(!opts.length) break;
+      game.choice = { prompt: c.prompt || '', options: opts, selected: 0, confirmed:false };
+      yield { waitFor:'choice' };
+      const sel = game.choice ? game.choice.selected : 0;
+      game.choice = null;
+      if(c.options[sel]) yield* runCommands(c.options[sel].commands, ctx);
+      break;
+    }
+    case 'if': {
+      const val = game.variables[c.variable];
+      if(compare(val, c.op, c.value)) yield* runCommands(c.then, ctx);
+      else yield* runCommands(c.else, ctx);
+      break;
+    }
+    case 'ifKey': {
+      if(keysDown.has(c.key)) yield* runCommands(c.then, ctx);
+      else yield* runCommands(c.else, ctx);
+      break;
+    }
+    case 'setVar': {
+      const cur = game.variables[c.variable];
+      if(c.op === 'set'){
+        game.variables[c.variable] = parseMaybeNumber(c.value);
+      } else {
+        const a = Number(cur) || 0;
+        const b = Number(c.value) || 0;
+        game.variables[c.variable] = c.op === 'add' ? a + b : a - b;
+      }
+      break;
+    }
+    case 'move': {
+      const tgt = resolveTarget(c.target, ctx);
+      if(!tgt) break;
+      const steps = Math.max(1, c.steps | 0);
+      const d = DIRS[c.dir] || DIRS.down;
+      for(let i=0; i<steps; i++){
+        tgt.dir = c.dir;
+        const nx = Math.round(tgt.px) + d.x;
+        const ny = Math.round(tgt.py) + d.y;
+        const blocked = isBlockedCell(game.map, nx, ny,
+          tgt === game.player ? game.events : game.events.filter(e => e !== tgt),
+          tgt === game.player ? null : tgt.id);
+        if(blocked) break;
+        startEntityMove(tgt, c.dir);
+        yield { waitFor:'move', obj: tgt };
+      }
+      break;
+    }
+    case 'wait': {
+      yield { waitFor:'time', time: Math.max(1, c.frames | 0) / 60 };
+      break;
+    }
+    case 'comment': break;
+    case 'changeMap': {
+      const target = getMap(c.mapId);
+      if(target){
+        switchGameMap(target, c.x, c.y, c.dir);
+        yield { waitFor:'time', time: 0.12 };
+      }
+      break;
+    }
+    case 'changeSprite': {
+      const tgt = resolveTarget(c.target, ctx);
+      if(tgt){
+        tgt.sheetId = c.sheetId || null;
+        if(tgt.id) tgt.spriteSheetId = c.sheetId || null;
+      }
+      break;
+    }
+  }
+}
+
+function parseMaybeNumber(v){
+  if(v === '' || v == null) return v;
+  const n = Number(v);
+  return Number.isNaN(n) ? v : n;
+}
+
+function switchGameMap(map, x, y, dir){
+  game.map = map;
+  game.events = map.events.map(e => ({
+    ...deep(e), px:e.x, py:e.y, dir:e.dir || 'down',
+    moving:false, walking:false, t:0, fromPx:e.x, fromPy:e.y, toPx:e.x, toPy:e.y, anim:0,
+    sheetId: e.spriteSheetId || null
+  }));
+  const p = game.player;
+  const sx = Number.isFinite(x) && x >= 0 ? x : 1;
+  const sy = Number.isFinite(y) && y >= 0 ? y : 1;
+  p.px = clamp(sx, 0, map.cols-1);
+  p.py = clamp(sy, 0, map.rows-1);
+  p.fromPx = p.px; p.fromPy = p.py; p.toPx = p.px; p.toPy = p.py;
+  p.moving = false; p.walking = false; p.t = 0;
+  if(dir) p.dir = dir;
+}
+
+/* --------------------------- blueprint run ------------------------- */
+function* runBlueprint(ev, ctx){
+  const bp = ev.blueprint;
+  if(!bp || !bp.nodes || !bp.nodes.length) return;
+  let node = bp.nodes.find(n => n.type === 'entry');
+  let guard = 0;
+  while(node && guard++ < 1000){
+    const port = yield* runBpNode(node, ctx);
+    const link = bp.links.find(l => l.from === node.id && l.port === port);
+    node = link ? bp.nodes.find(n => n.id === link.to) : null;
+  }
+}
+function* runBpNode(node, ctx){
+  if(node.type === 'entry') return 'out';
+  const cmd = node.props;
+  if(node.type === 'branch'){
+    const val = game.variables[cmd.variable];
+    return compare(val, cmd.op, cmd.value) ? 'true' : 'false';
+  }
+  if(node.type === 'choice'){
+    const opts = (cmd.options || []).map(o => o.text);
+    if(!opts.length) return 'out';
+    game.choice = { prompt: cmd.prompt || '', options: opts, selected: 0, confirmed:false };
+    yield { waitFor:'choice' };
+    const sel = game.choice ? game.choice.selected : 0;
+    game.choice = null;
+    return 'opt' + sel;
+  }
+  yield* runCommand(cmd, ctx);
+  return 'out';
+}
+
+function runEventScript(ev){
+  if(game.script) return;
+  const ctx = { event: ev };
+  const useBp = ev.useBlueprint && ev.blueprint && ev.blueprint.nodes.some(n => n.type !== 'entry');
+  if(useBp) startScript(runBlueprint(ev, ctx), ctx);
+  else startScript(runCommands(ev.commands, ctx), ctx);
+}
+
+/* --------------------------- game update --------------------------- */
+function updateGame(dt){
+  game.time += dt;
+  const map = game.map;
+
+  if(game.startDelay > 0){
+    game.startDelay -= dt;
+    if(game.startDelay <= 0){
+      const auto = game.events.filter(e => e.trigger === 'autorun');
+      if(auto.length) runEventScript(auto[0]);
+    }
+    return;
+  }
+
+  if(game.choice && !game.choice.confirmed){
+    const n = game.choice.options.length;
+    if(pressed('ArrowUp') || pressed('KeyW')) game.choice.selected = (game.choice.selected - 1 + n) % n;
+    if(pressed('ArrowDown') || pressed('KeyS')) game.choice.selected = (game.choice.selected + 1) % n;
+    if(pressed('Space') || pressed('Enter') || pressed('KeyZ')) game.choice.confirmed = true;
+  }
+
+  updateScriptWaits(dt);
+
+  const busy = !!game.script;
+  const p = game.player;
+
+  /* Tweened (scripted) movement only — free movement uses px/py directly. */
+  updateEntityMove(p, dt, p.speed || 5);
+  p.anim += dt;
+
+  if(!busy && !p.moving){
+    let mx = 0, my = 0;
+    if(keysDown.has('ArrowLeft') || keysDown.has('KeyA')) mx -= 1;
+    if(keysDown.has('ArrowRight') || keysDown.has('KeyD')) mx += 1;
+    if(keysDown.has('ArrowUp') || keysDown.has('KeyW')) my -= 1;
+    if(keysDown.has('ArrowDown') || keysDown.has('KeyS')) my += 1;
+
+    if(mx || my){
+      const len = Math.hypot(mx, my);
+      mx /= len; my /= len;
+      const spd = p.speed || 5;
+      const nx = p.px + mx * spd * dt;
+      const ny = p.py + my * spd * dt;
+      if(!boxBlocked(nx, p.py, game.events, null)) p.px = nx;
+      if(!boxBlocked(p.px, ny, game.events, null)) p.py = ny;
+      p.px = clamp(p.px, 0.3, map.cols - 0.3);
+      p.py = clamp(p.py, 0.3, map.rows - 0.3);
+      p.dir = Math.abs(mx) > Math.abs(my) ? (mx > 0 ? 'right' : 'left') : (my > 0 ? 'down' : 'up');
+      p.walking = true;
+    } else {
+      p.walking = false;
+    }
+
+    if(pressed('Space') || pressed('Enter') || pressed('KeyZ')){
+      const d = DIRS[p.dir];
+      const fx = Math.round(p.px) + d.x;
+      const fy = Math.round(p.py) + d.y;
+      const ev = game.events.find(e => Math.round(e.px) === fx && Math.round(e.py) === fy && e.trigger === 'action');
+      if(ev) runEventScript(ev);
+    }
+  } else {
+    p.walking = false;
+  }
+
+  // touch triggers
+  if(!game.script){
+    for(const e of game.events){
+      if(e.trigger !== 'touch') continue;
+      const dist = Math.hypot(e.px - p.px, e.py - p.py);
+      if(e._lock && dist > 1.1) e._lock = false;
+      if(!e._lock && dist < 0.7){
+        e._lock = true;
+        runEventScript(e);
+        break;
+      }
+    }
+  }
+
+  for(const e of game.events){
+    updateEntityMove(e, dt, 5);
+    e.anim += dt;
+  }
+}
+
+function updateScriptWaits(dt){
+  const s = game.script;
+  if(!s || !s.wait) return;
+  const w = s.wait;
+  let done = false;
+
+  if(w.waitFor === 'input'){
+    if(pressed('Space') || pressed('Enter') || pressed('KeyZ')) done = true;
+  } else if(w.waitFor === 'choice'){
+    if(game.choice && game.choice.confirmed) done = true;
+  } else if(w.waitFor === 'time'){
+    w.time -= dt;
+    if(w.time <= 0) done = true;
+  } else if(w.waitFor === 'move'){
+    if(!w.obj || !w.obj.moving) done = true;
+  }
+
+  if(done){
+    s.wait = null;
+    advanceScript();
+  }
+}
+
+/* --------------------------- game render --------------------------- */
+function drawCharacter(c, ent, ts, isPlayer){
+  const sheet = getSheet(ent.sheetId);
+  const img = sheet ? getImg(sheet) : null;
+
+  if(!img || !img.complete || !img.naturalWidth){
+    const x = Math.round(ent.px*ts), y = Math.round(ent.py*ts);
+    c.fillStyle = isPlayer ? '#4a9eff' : '#7f8fa6';
+    c.beginPath();
+    if(c.roundRect) c.roundRect(x+4, y+3, ts-8, ts-6, 4);
+    else c.rect(x+4, y+3, ts-8, ts-6);
+    c.fill();
+    const d = DIRS[ent.dir] || DIRS.down;
+    c.fillStyle = '#ffffff';
+    c.beginPath();
+    c.arc(x + ts/2 + d.x*ts*0.22, y + ts/2 + d.y*ts*0.22, Math.max(1.5, ts*0.07), 0, Math.PI*2);
+    c.fill();
+    return;
+  }
+
+  const frames = sheet.frames || {};
+  let list = frames[ent.dir];
+  if(!list || !list.length) list = [0];
+
+  let idx = list[0];
+  if(list.length > 1 && (ent.moving || ent.walking)){
+    idx = list[Math.floor(ent.anim * 8) % list.length];
+  }
+
+  const fw = sheet.frameW, fh = sheet.frameH;
+  const sx = (idx % sheet.cols) * fw;
+  const sy = Math.floor(idx / sheet.cols) * fh;
+  c.drawImage(img, sx, sy, fw, fh, Math.round(ent.px*ts), Math.round(ent.py*ts), ts, ts);
+}
+
+function drawProjectUI(c){
+  const ui = project.ui;
+  if(!ui || !ui.elements || !ui.elements.length) return;
+  const scale = Math.min(canvas.width/ui.width, canvas.height/ui.height);
+  const ox = (canvas.width - ui.width*scale)/2;
+  const oy = (canvas.height - ui.height*scale)/2;
+  c.save();
+  c.translate(ox, oy);
+  c.scale(scale, scale);
+  for(const el of ui.elements){
+    if(el.type === 'sprite'){
+      const sheet = getSheet(el.sheetId);
+      const img = sheet ? getImg(sheet) : null;
+      if(img && img.complete && img.naturalWidth){
+        const fw = sheet.frameW, fh = sheet.frameH;
+        const idx = el.frameIndex || 0;
+        c.drawImage(img, (idx % sheet.cols)*fw, Math.floor(idx/sheet.cols)*fh, fw, fh,
+          el.x, el.y, el.w, el.h);
+      }
+    } else {
+      const text = String(el.text || '').replace(/\{(\w+)\}/g, (m,k) =>
+        game.variables[k] !== undefined ? game.variables[k] : m);
+      c.font = `${el.bold ? 'bold ' : ''}${el.fontSize}px "Segoe UI", sans-serif`;
+      c.fillStyle = el.color || '#ffffff';
+      c.textAlign = el.align || 'left';
+      c.textBaseline = 'top';
+      c.fillText(text, el.x, el.y);
+    }
+  }
+  c.restore();
+}
+
+function drawGame(){
+  const map = game.map;
+  if(!map) return;
+  if(canvas.width !== Math.max(320, $('#canvasWrap').clientWidth) ||
+     canvas.height !== Math.max(240, $('#canvasWrap').clientHeight)){
+    resizePlayCanvas();
+  }
+  const ts = map.tileSize;
+  const vw = canvas.width, vh = canvas.height;
+  const mapW = map.cols * ts, mapH = map.rows * ts;
+
+  ctx2d.imageSmoothingEnabled = false;
+  ctx2d.fillStyle = '#0d0d0d';
+  ctx2d.fillRect(0, 0, vw, vh);
+
+  const p = game.player;
+  let camX, camY;
+  if(mapW <= vw) camX = -(vw - mapW) / 2;
+  else camX = clamp(p.px*ts + ts/2 - vw/2, 0, mapW - vw);
+  if(mapH <= vh) camY = -(vh - mapH) / 2;
+  else camY = clamp(p.py*ts + ts/2 - vh/2, 0, mapH - vh);
+
+  ctx2d.save();
+  ctx2d.translate(-Math.round(camX), -Math.round(camY));
+  ctx2d.drawImage(getMapCanvas(map), 0, 0);
+
+  const ents = [];
+  for(const e of game.events) ents.push({ kind:'event', obj:e, y: e.py });
+  ents.push({ kind:'player', obj:p, y: p.py });
+  ents.sort((a,b) => a.y - b.y);
+
+  for(const ent of ents){
+    if(ent.kind === 'player') drawCharacter(ctx2d, p, ts, true);
+    else {
+      const e = ent.obj;
+      if(e.sheetId) drawCharacter(ctx2d, e, ts, false);
+      else {
+        ctx2d.fillStyle = 'rgba(120,180,255,.55)';
+        ctx2d.fillRect(Math.round(e.px*ts)+3, Math.round(e.py*ts)+3, ts-6, ts-6);
+        ctx2d.strokeStyle = '#78b4ff'; ctx2d.lineWidth = 2;
+        ctx2d.strokeRect(Math.round(e.px*ts)+3, Math.round(e.py*ts)+3, ts-6, ts-6);
+      }
+    }
+  }
+  ctx2d.restore();
+
+  drawProjectUI(ctx2d);
+  drawGameUI(ctx2d, vw, vh);
+}
+
+function drawGameUI(c, vw, vh){
+  if(game.dialogue){
+    const boxH = 108, pad = 14;
+    const bx = pad, by = vh - boxH - pad, bw = vw - pad*2;
+    c.fillStyle = 'rgba(8,12,20,.92)';
+    c.fillRect(bx, by, bw, boxH);
+    c.strokeStyle = '#4a9eff'; c.lineWidth = 2;
+    c.strokeRect(bx + .5, by + .5, bw - 1, boxH - 1);
+
+    let ty = by + 26;
+    if(game.dialogue.speaker){
+      c.fillStyle = '#ffd166';
+      c.font = 'bold 14px "Segoe UI", sans-serif';
+      c.textAlign = 'left'; c.textBaseline = 'alphabetic';
+      c.fillText(game.dialogue.speaker, bx + 16, ty);
+      ty += 24;
+    }
+    c.fillStyle = '#eaeaea';
+    c.font = '15px "Segoe UI", sans-serif';
+    const lines = wrapText(c, game.dialogue.text, bw - 40);
+    for(const line of lines.slice(0, 3)){
+      c.fillText(line, bx + 16, ty);
+      ty += 22;
+    }
+    if(Math.floor(game.time * 2) % 2 === 0){
+      c.fillStyle = '#4a9eff';
+      c.beginPath();
+      c.moveTo(bx + bw - 24, by + boxH - 20);
+      c.lineTo(bx + bw - 14, by + boxH - 20);
+      c.lineTo(bx + bw - 19, by + boxH - 13);
+      c.closePath(); c.fill();
+    }
+  }
+
+  if(game.choice){
+    const opts = game.choice.options;
+    const bw = Math.min(320, vw - 40);
+    const lineH = 26;
+    const bh = opts.length * lineH + 20 + (game.choice.prompt ? 26 : 0);
+    const bx = vw - bw - 14;
+    const by = vh - 108 - 14 - bh - 8;
+
+    c.fillStyle = 'rgba(8,12,20,.94)';
+    c.fillRect(bx, by, bw, bh);
+    c.strokeStyle = '#4a9eff'; c.lineWidth = 2;
+    c.strokeRect(bx + .5, by + .5, bw - 1, bh - 1);
+
+    let ty = by + 24;
+    if(game.choice.prompt){
+      c.fillStyle = '#9fc4ff';
+      c.font = '13px "Segoe UI", sans-serif';
+      c.textAlign = 'left';
+      c.fillText(game.choice.prompt, bx + 14, ty);
+      ty += 24;
+    }
+    c.font = '14px "Segoe UI", sans-serif';
+    opts.forEach((o, i) => {
+      const sel = i === game.choice.selected;
+      if(sel){
+        c.fillStyle = 'rgba(74,158,255,.22)';
+        c.fillRect(bx + 6, ty - 17, bw - 12, lineH - 4);
+        c.fillStyle = '#ffd166';
+        c.fillText('▶', bx + 12, ty);
+      }
+      c.fillStyle = sel ? '#ffffff' : '#bdbdbd';
+      c.fillText(o, bx + 32, ty);
+      ty += lineH;
+    });
+  }
+}
+
+function wrapText(c, text, maxW){
+  const out = [];
+  for(const para of String(text).split('\n')){
+    const words = para.split(' ');
+    let line = '';
+    for(const w of words){
+      const test = line ? line + ' ' + w : w;
+      if(c.measureText(test).width > maxW && line){ out.push(line); line = w; }
+      else line = test;
+    }
+    out.push(line);
+  }
+  return out;
+}
+
+/* =====================================================================
+   MAIN LOOP
+   ===================================================================== */
+let lastTime = performance.now();
+function loop(now){
+  const dt = Math.min(0.05, (now - lastTime) / 1000);
+  lastTime = now;
+
+  if(game.active){
+    updateGame(dt);
+    drawGame();
+  } else if(editor.view === 'ui'){
+    drawUiEditor();
+  } else {
+    drawEditor();
+  }
+  keysPressed.clear();
+  requestAnimationFrame(loop);
+}
+
+/* =====================================================================
+   BOOT
+   ===================================================================== */
+function boot(){
+  let restored = false;
+  try {
+    const raw = localStorage.getItem('rpgstudio.autosave');
+    if(raw){
+      const data = JSON.parse(raw);
+      const p = migrateProject(data);
+      if(p && p.maps.length){
+        project = p;
+        currentMapId = project.maps[0].id;
+        restored = true;
+      }
+    }
+  } catch(e){}
+
+  if(!restored){
+    project = blankProject();
+    const m = newMap('Map 1', 20, 15, 32);
+    project.maps.push(m);
+    currentMapId = m.id;
+  }
+
+  editor.selectedPlayerId = (getPrimaryPlayer() || {}).id || null;
+
+  setTool('paint');
+  refreshAll();
+  setView('map');
+  requestAnimationFrame(loop);
+
+  if(restored) toast('Restored last session');
+  else toast('Welcome to RPG Studio — import a sprite sheet to get started');
+}
+
+boot();
+</script>
+</body>
+</html>
